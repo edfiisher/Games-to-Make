@@ -35,3 +35,7 @@ Choose **On Commit** for this setup. GitHub's built-in workflow token does not t
 A checkpoint-only commit includes `[skip render]`; no change to playable content means no unnecessary deployment. Real bank changes use a normal commit. Active rooms reset on deployment because they are in memory; browser question history survives. The import is scheduled in the morning to reduce disruption.
 
 Automatic deployment requires Render's GitHub connection. A service configured only with a public repository URL must first be linked through the Git provider connection; see [Render's deployment documentation](https://render.com/docs/deploys). `render.yaml` explicitly sets `autoDeployTrigger: commit`, but an existing service that is not managed by that Blueprint still needs its dashboard setting changed.
+
+## Free Counterline address
+
+The selected next address is a free Counterline-branded Render subdomain. The [address change guide](docs/CHANGE-ADDRESS.md) provides exact settings for a new free service using the same GitHub repository. The target hostname is subject to availability and has not yet been provisioned. Keep the existing flat-dive service until the new address has been verified.
