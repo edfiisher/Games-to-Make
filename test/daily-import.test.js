@@ -219,3 +219,16 @@ test("a changed list with a stale homepage preview needs agreement from its full
     f.requests.some((u) => u.includes("/answers/daily/2026-10-17/p1-item/")),
   );
 });
+
+test("full question pages may publish more preview rows than the homepage", () => {
+  let single = [
+    ...page().matchAll(/<details[\s\S]*?<\/details>/g),
+  ][0][0].replace("data-total='2'", "data-total='14'");
+  const extra = Array.from(
+    { length: 12 },
+    (_, i) =>
+      `<div class='answer-row' data-answer='Additional ${i}' data-score='60'></div>`,
+  ).join("");
+  single = single.replace("</details>", extra + "</details>");
+  assert.equal(parseDailyPage(single, date, 1)[0].preview.length, 14);
+});

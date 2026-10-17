@@ -100,7 +100,9 @@ export function parseDailyPage(html, expectedDate, expectedNumber = null) {
         score: Number(attribute(m[1], "data-score")),
       }));
     if (
-      preview.length !== Math.min(10, count) ||
+      preview.length < Math.min(10, count) ||
+      preview.length > count ||
+      new Set(preview.map((a) => a.answer)).size !== preview.length ||
       preview.some((a) => !a.answer || !Object.values(scores).includes(a.score))
     )
       throw Error("Incomplete daily answer preview");
