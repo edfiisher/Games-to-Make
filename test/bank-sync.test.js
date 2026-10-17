@@ -10,13 +10,21 @@ import {
   judge,
   suggestAnswer,
   selectQuestions,
+  normalize,
 } from "../questions.js";
 import definitions from "../data/curated/definitions.mjs";
 
 test("expanded bank has 200 distinct, sourced questions with complete finite-set counts", () => {
   assert.ok(questions.length >= 200);
-  assert.equal(bank.houseQuestionCount, 121);
-  assert.equal(definitions.length, 121);
+  assert.equal(
+    bank.houseQuestionCount,
+    questions.filter((q) => q.scoring === "house-frequency-v1").length,
+  );
+  assert.ok(definitions.length >= 121);
+  assert.ok(bank.houseQuestionCount <= definitions.length);
+  const compiledPrompts = new Set(questions.map((q) => normalize(q.text)));
+  for (const definition of definitions)
+    assert.ok(compiledPrompts.has(normalize(definition.text)), definition.text);
   assert.equal(
     new Set(questions.map((q) => q.text.toLowerCase())).size,
     questions.length,
