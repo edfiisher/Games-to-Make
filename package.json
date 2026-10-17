@@ -4,7 +4,10 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "build:bank": "node scripts/build-bank.js",
+    "sync:questions": "node scripts/sync-recorded.js",
+    "profile": "node scripts/profile.js"
   },
   "engines": {
     "node": ">=24"

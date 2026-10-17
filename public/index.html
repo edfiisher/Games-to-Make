@@ -1,73 +1,283 @@
 <!doctype html>
 <html lang="en">
-<head>
- <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
- <meta name="theme-color" content="#edf3f3"><meta name="description" content="Seven questions. One mountain. Find the rarest answers and ski further. Play solo or invite a friend.">
- <title>Fresh Tracks · think off-piste</title><link rel="stylesheet" href="/style.css">
-</head>
-<body>
- <header class="site-header"><a class="brand" href="/" aria-label="Fresh Tracks home"><svg viewBox="0 0 44 36" aria-hidden="true"><path d="M2 32 20 3l9 15 5-7 9 21Z" fill="currentColor"/><path d="m15 12 5-9 6 10-7-3Z" fill="#edf3f3"/></svg><span>FRESH TRACKS<small>THINK OFF-PISTE.</small></span></a><button id="sound" class="quiet" aria-pressed="false">SOUND OFF</button></header>
- <main>
-  <section class="mountain-panel" aria-label="Your journey down the mountain">
-   <div class="mountain-label"><span class="status-dot"></span> THE MOUNTAIN IS OPEN <span id="run-number">YOUR NEXT RUN AWAITS</span></div>
-   <svg id="mountain" viewBox="0 0 900 700" role="img" aria-label="A skier travels from the summit to the valley as you score points">
-    <defs>
-     <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#c5dee5"/><stop offset="1" stop-color="#f0f5ee"/></linearGradient>
-     <linearGradient id="snow" x1="0" x2=".5" y2="1"><stop stop-color="#fffdf5"/><stop offset="1" stop-color="#dce9e8"/></linearGradient>
-     <linearGradient id="shadow" x2="1" y2="1"><stop stop-color="#9dbbc6"/><stop offset="1" stop-color="#d3e1e4"/></linearGradient>
-     <symbol id="pine" viewBox="0 0 30 65"><path d="m15 0-10 22h5L0 43h10v22h10V43h10L20 22h5Z" fill="#2a565a"/></symbol>
-     <filter id="skier-shadow"><feDropShadow dx="1" dy="3" stdDeviation="2" flood-opacity=".2"/></filter>
-    </defs>
-    <rect width="900" height="700" fill="url(#sky)"/>
-    <circle cx="735" cy="110" r="44" fill="#f8ead1"/>
-    <path d="M-60 360 130 120 260 290 370 155 550 380 710 215 960 400V700H0Z" fill="#acc7ce"/>
-    <path d="m50 260 80-140 90 118-68-29-26 21-20-27Z" fill="#e0edef"/>
-    <path d="m304 245 66-90 101 127-83-37-19 13-15-34Z" fill="#e4eef0"/>
-    <path d="M-90 700 330 106 475 300 610 210 990 700Z" fill="url(#snow)"/>
-    <path d="m330 106 145 194 135-90-84 201-130 133-135 156H91l176-366 85 25-59-71 27-57Z" fill="url(#shadow)"/>
-    <path d="m330 106-66 153 56-28-27 57 59 71-39-126Z" fill="#fffef9"/>
-    <path d="M384 310 447 370 391 435 534 520 620 700H900L610 210l-54 147-71 61Z" fill="#edf4ef"/>
-    <path d="M-50 620Q130 510 350 611t600-20v160H-50Z" fill="#d2e2df"/>
-    <g opacity=".9"><use href="#pine" x="82" y="430" width="32" height="69"/><use href="#pine" x="119" y="468" width="25" height="54"/><use href="#pine" x="56" y="476" width="42" height="91"/><use href="#pine" x="758" y="399" width="31" height="67"/><use href="#pine" x="791" y="435" width="42" height="91"/><use href="#pine" x="736" y="452" width="25" height="54"/><use href="#pine" x="162" y="567" width="42" height="91"/><use href="#pine" x="680" y="567" width="48" height="103"/><use href="#pine" x="715" y="600" width="32" height="69"/></g>
-    <path id="run-path" d="M340 157C372 198 410 207 431 252S355 309 330 343 466 388 490 426 418 485 413 515 566 562 589 611" fill="none" stroke="#9ab5b8" stroke-width="3" stroke-dasharray="6 10"/>
-    <path id="ski-trail" d="M340 157C372 198 410 207 431 252S355 309 330 343 466 388 490 426 418 485 413 515 566 562 589 611" fill="none" stroke="#db613d" stroke-width="5" stroke-linecap="round"/>
-    <g transform="translate(320 115)"><path d="M0 0v38" stroke="#173c42" stroke-width="3"/><path d="M0 0h31l-8 9 8 9H0Z" fill="#df643f"/><text x="43" y="18" class="map-label">THE SUMMIT</text></g>
-    <g transform="translate(572 610)"><path d="M-5 0v34M35 0v34" stroke="#173c42" stroke-width="3"/><path d="M-5 0h40v13H-5Z" fill="#173c42"/><text x="16" y="52" text-anchor="middle" class="map-label">THE VALLEY</text></g>
-    <g transform="translate(520 592)"><path d="M-25 0h49v36h-49Z" fill="#b9754e"/><path d="m-34 0 34-27L34 0Z" fill="#25494c"/><path d="m-34-2 34-28L34-2l-20-5L0-20l-14 13Z" fill="#fffdf5"/><path d="M-5 14H7v22H-5Z" fill="#4b4038"/><path d="M-17 10h8v9h-8ZM12 10h8v9h-8Z" fill="#ffd98a"/></g>
-    <g id="snow-particles" aria-hidden="true"></g>
-    <g id="skier" transform="translate(340 157)">
-     <ellipse id="ski-shadow" cy="4" rx="27" ry="7" fill="#284f5940"/>
-     <g id="skier-motion"><g id="skier-art"><image href="/assets/skier.png" x="-65" y="-118" width="135" height="135"/></g></g>
-    </g>
-    <g class="contour" fill="none" stroke="#fff" stroke-opacity=".38"><path d="M20 650Q120 575 241 619M660 343q70 10 117 92M32 389q80-20 140 12M490 149l70 47"/></g>
-   </svg>
-   <div id="descent-callout" class="descent-callout" role="status" hidden><span id="descent-title"></span><strong id="descent-distance"></strong></div>
-   <div class="mountain-bottom"><span>7 TURNS / 7,000 METRES</span><span>RARE ANSWERS. LONGER LINES. ↘</span></div>
-  </section>
-  <section class="play-panel">
-   <section id="home">
-    <div class="eyebrow">A LITTLE KNOWLEDGE. A LOT OF MOUNTAIN.</div>
-    <h1>Fresh snow.<br>Fresh <em>questions.</em></h1>
-    <p class="lede">Seven questions. Twenty-five seconds each.<br>Find a rarer answer. Ski a little further.</p>
-    <div class="run-card"><svg class="run-card-icon" viewBox="0 0 28 28" aria-hidden="true"><path d="m5 5 18 18M8 23h15V8" fill="none" stroke="currentColor" stroke-width="2"/></svg><div><strong>Your next run is ready.</strong><p id="bank-note">New turns, every time you play.</p></div></div>
-    <button id="start" class="primary">START A NEW RUN <span>↘</span></button>
-    <p class="solo-note">Just you and the mountain. No sign-up needed.</p>
-    <details class="friends"><summary>Taking a friend along? <span>＋</span></summary><p>Prepare a run, share an invite, then start your timer. Or join a friend here.</p><label for="name">Your name <span>optional</span></label><input id="name" maxlength="24" autocomplete="nickname" placeholder="A name for the leaderboard"><form id="joinform"><label for="code">Have an invite code?</label><div class="input-row"><input id="code" maxlength="6" placeholder="ABC123" autocomplete="off" aria-label="Invite code"><button type="submit" class="secondary">JOIN RUN →</button></div></form></details>
-    <div class="how"><span>01 <b>Read the question.</b></span><span>02 <b>Think off-piste.</b></span><span>03 <b>Let it run.</b></span></div>
-   </section>
-   <section id="game" hidden>
-    <div class="hud"><div><span>METRES SKIED</span><strong id="distance">0<span>m</span></strong></div><div class="score-stat"><span>POINTS</span><strong id="score">0</strong></div></div>
-    <div class="runline"><span id="roundlabel">TURN 1 / 7</span><div id="dots" aria-label="Run progress"></div><button id="invite" class="quiet">INVITE A FRIEND ↗</button></div>
-    <div id="stage" aria-live="polite"></div>
-    <section id="leaderboard" class="board" hidden><div class="sectiontitle">ON THE MOUNTAIN <span>YOUR SHARED RUN</span></div><ol id="board"></ol></section>
-    <button id="new-run" class="text-button">Leave this run · start fresh →</button>
-   </section>
-   <p id="error" role="alert"></p>
-   <p id="notice" class="notice">Rarity scoring inspired by Krillion. Recorded answers from <a href="https://krillionanswers.com/answer-finder/" target="_blank" rel="noreferrer">Krillion Answers</a>. Independent game.</p>
-  </section>
- </main>
- <footer><span>FRESH TRACKS © 2026</span><span>GOOD COMPANY. BETTER LINES.</span><span>SEE YOU AT THE BOTTOM. ↘</span></footer>
- <dialog id="invite-dialog"><button id="close-invite" class="dialog-close" aria-label="Close invite">×</button><div class="eyebrow">BETTER WITH COMPANY</div><h2>Meet you on the mountain.</h2><p>Send this link to a friend. They’ll join your run with the same seven questions. You can invite before starting or between turns. Each skier gets their own timer.</p><label for="invite-link">Your invite link</label><input id="invite-link" readonly><div class="share-actions"><button id="share" class="primary">SHARE INVITE ↗</button><button id="copy" class="secondary">COPY LINK</button></div><p class="invite-code">Or share the code: <strong id="roomcode"></strong></p><p id="share-status" role="status"></p></dialog>
- <script type="module" src="/app.js"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#edf3f3" />
+    <meta
+      name="description"
+      content="Seven questions. One mountain. Find the rarest answers and ski further. Play solo or invite a friend."
+    />
+    <title>Fresh Tracks · think off-piste</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Fresh Tracks home"
+        ><svg viewBox="0 0 44 36" aria-hidden="true">
+          <path d="M2 32 20 3l9 15 5-7 9 21Z" fill="currentColor" />
+          <path d="m15 12 5-9 6 10-7-3Z" fill="#edf3f3" /></svg
+        ><span>FRESH TRACKS<small>THINK OFF-PISTE.</small></span></a
+      ><button id="sound" class="quiet" aria-pressed="false">SOUND OFF</button>
+    </header>
+    <main>
+      <section
+        class="mountain-panel"
+        aria-label="Your journey down the mountain"
+      >
+        <div class="mountain-label">
+          <span class="status-dot"></span> THE MOUNTAIN IS OPEN
+          <span id="run-number">YOUR NEXT RUN AWAITS</span>
+        </div>
+        <svg
+          id="mountain"
+          viewBox="0 0 900 700"
+          role="img"
+          aria-label="A skier travels from the summit to the valley as you score points"
+        >
+          <defs>
+            <linearGradient id="sky" x2="0" y2="1">
+              <stop stop-color="#c5dee5" />
+              <stop offset="1" stop-color="#f0f5ee" />
+            </linearGradient>
+            <linearGradient id="snow" x1="0" x2=".5" y2="1">
+              <stop stop-color="#fffdf5" />
+              <stop offset="1" stop-color="#dce9e8" />
+            </linearGradient>
+            <linearGradient id="shadow" x2="1" y2="1">
+              <stop stop-color="#9dbbc6" />
+              <stop offset="1" stop-color="#d3e1e4" />
+            </linearGradient>
+            <symbol id="pine" viewBox="0 0 30 65">
+              <path
+                d="m15 0-10 22h5L0 43h10v22h10V43h10L20 22h5Z"
+                fill="#2a565a"
+              />
+            </symbol>
+            <filter id="skier-shadow">
+              <feDropShadow dx="1" dy="3" stdDeviation="2" flood-opacity=".2" />
+            </filter>
+          </defs>
+          <rect width="900" height="700" fill="url(#sky)" />
+          <circle cx="735" cy="110" r="44" fill="#f8ead1" />
+          <path
+            d="M-60 360 130 120 260 290 370 155 550 380 710 215 960 400V700H0Z"
+            fill="#acc7ce"
+          />
+          <path d="m50 260 80-140 90 118-68-29-26 21-20-27Z" fill="#e0edef" />
+          <path d="m304 245 66-90 101 127-83-37-19 13-15-34Z" fill="#e4eef0" />
+          <path
+            d="M-90 700 330 106 475 300 610 210 990 700Z"
+            fill="url(#snow)"
+          />
+          <path
+            d="m330 106 145 194 135-90-84 201-130 133-135 156H91l176-366 85 25-59-71 27-57Z"
+            fill="url(#shadow)"
+          />
+          <path d="m330 106-66 153 56-28-27 57 59 71-39-126Z" fill="#fffef9" />
+          <path
+            d="M384 310 447 370 391 435 534 520 620 700H900L610 210l-54 147-71 61Z"
+            fill="#edf4ef"
+          />
+          <path d="M-50 620Q130 510 350 611t600-20v160H-50Z" fill="#d2e2df" />
+          <g opacity=".9">
+            <use href="#pine" x="82" y="430" width="32" height="69" />
+            <use href="#pine" x="119" y="468" width="25" height="54" />
+            <use href="#pine" x="56" y="476" width="42" height="91" />
+            <use href="#pine" x="758" y="399" width="31" height="67" />
+            <use href="#pine" x="791" y="435" width="42" height="91" />
+            <use href="#pine" x="736" y="452" width="25" height="54" />
+            <use href="#pine" x="162" y="567" width="42" height="91" />
+            <use href="#pine" x="680" y="567" width="48" height="103" />
+            <use href="#pine" x="715" y="600" width="32" height="69" />
+          </g>
+          <path
+            id="run-path"
+            d="M340 157C372 198 410 207 431 252S355 309 330 343 466 388 490 426 418 485 413 515 566 562 589 611"
+            fill="none"
+            stroke="#9ab5b8"
+            stroke-width="3"
+            stroke-dasharray="6 10"
+          />
+          <path
+            id="ski-trail"
+            d="M340 157C372 198 410 207 431 252S355 309 330 343 466 388 490 426 418 485 413 515 566 562 589 611"
+            fill="none"
+            stroke="#db613d"
+            stroke-width="5"
+            stroke-linecap="round"
+          />
+          <g transform="translate(320 115)">
+            <path d="M0 0v38" stroke="#173c42" stroke-width="3" />
+            <path d="M0 0h31l-8 9 8 9H0Z" fill="#df643f" />
+            <text x="43" y="18" class="map-label">THE SUMMIT</text>
+          </g>
+          <g transform="translate(572 610)">
+            <path d="M-5 0v34M35 0v34" stroke="#173c42" stroke-width="3" />
+            <path d="M-5 0h40v13H-5Z" fill="#173c42" />
+            <text x="16" y="52" text-anchor="middle" class="map-label">
+              THE VALLEY
+            </text>
+          </g>
+          <g transform="translate(520 592)">
+            <path d="M-25 0h49v36h-49Z" fill="#b9754e" />
+            <path d="m-34 0 34-27L34 0Z" fill="#25494c" />
+            <path d="m-34-2 34-28L34-2l-20-5L0-20l-14 13Z" fill="#fffdf5" />
+            <path d="M-5 14H7v22H-5Z" fill="#4b4038" />
+            <path d="M-17 10h8v9h-8ZM12 10h8v9h-8Z" fill="#ffd98a" />
+          </g>
+          <g id="snow-particles" aria-hidden="true"></g>
+          <g id="skier" transform="translate(340 157)">
+            <ellipse id="ski-shadow" cy="4" rx="27" ry="7" fill="#284f5940" />
+            <g id="skier-motion">
+              <g id="skier-art">
+                <image
+                  href="/assets/skier.webp"
+                  x="-65"
+                  y="-118"
+                  width="135"
+                  height="135"
+                />
+              </g>
+            </g>
+          </g>
+          <g class="contour" fill="none" stroke="#fff" stroke-opacity=".38">
+            <path
+              d="M20 650Q120 575 241 619M660 343q70 10 117 92M32 389q80-20 140 12M490 149l70 47"
+            />
+          </g>
+        </svg>
+        <div id="descent-callout" class="descent-callout" role="status" hidden>
+          <span id="descent-title"></span
+          ><strong id="descent-distance"></strong>
+        </div>
+        <div class="mountain-bottom">
+          <span>7 TURNS / 7,000 METRES</span
+          ><span>RARE ANSWERS. LONGER LINES. ↘</span>
+        </div>
+      </section>
+      <section class="play-panel">
+        <section id="home">
+          <div class="eyebrow">A LITTLE KNOWLEDGE. A LOT OF MOUNTAIN.</div>
+          <h1>Fresh snow.<br />Fresh <em>questions.</em></h1>
+          <p class="lede">
+            Seven questions. Twenty-five seconds each.<br />Find a rarer answer.
+            Ski a little further.
+          </p>
+          <div class="run-card">
+            <svg class="run-card-icon" viewBox="0 0 28 28" aria-hidden="true">
+              <path
+                d="m5 5 18 18M8 23h15V8"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+            </svg>
+            <div>
+              <strong>Your next run is ready.</strong>
+              <p id="bank-note">New turns, every time you play.</p>
+            </div>
+          </div>
+          <button id="start" class="primary">
+            START A NEW RUN <span>↘</span>
+          </button>
+          <p class="solo-note">Just you and the mountain. No sign-up needed.</p>
+          <details class="friends">
+            <summary>Taking a friend along? <span>＋</span></summary>
+            <p>
+              Prepare a run, share an invite, then start your timer. Or join a
+              friend here.
+            </p>
+            <label for="name">Your name <span>optional</span></label
+            ><input
+              id="name"
+              maxlength="24"
+              autocomplete="nickname"
+              placeholder="A name for the leaderboard"
+            />
+            <form id="joinform">
+              <label for="code">Have an invite code?</label>
+              <div class="input-row">
+                <input
+                  id="code"
+                  maxlength="6"
+                  placeholder="ABC123"
+                  autocomplete="off"
+                  aria-label="Invite code"
+                /><button type="submit" class="secondary">JOIN RUN →</button>
+              </div>
+            </form>
+          </details>
+          <div class="how">
+            <span>01 <b>Read the question.</b></span
+            ><span>02 <b>Think off-piste.</b></span
+            ><span>03 <b>Let it run.</b></span>
+          </div>
+        </section>
+        <section id="game" hidden>
+          <div class="hud">
+            <div>
+              <span>METRES SKIED</span
+              ><strong id="distance">0<span>m</span></strong>
+            </div>
+            <div class="score-stat">
+              <span>POINTS</span><strong id="score">0</strong>
+            </div>
+          </div>
+          <div class="runline">
+            <span id="roundlabel">TURN 1 / 7</span>
+            <div id="dots" aria-label="Run progress"></div>
+            <button id="invite" class="quiet">INVITE A FRIEND ↗</button>
+          </div>
+          <div id="stage" aria-live="polite"></div>
+          <section id="leaderboard" class="board" hidden>
+            <div class="sectiontitle">
+              ON THE MOUNTAIN <span>YOUR SHARED RUN</span>
+            </div>
+            <ol id="board"></ol>
+          </section>
+          <button id="new-run" class="text-button">
+            Leave this run · start fresh →
+          </button>
+        </section>
+        <p id="error" role="alert"></p>
+        <p id="notice" class="notice">
+          Rarity scoring inspired by Krillion. Recorded answers from
+          <a
+            href="https://krillionanswers.com/answer-finder/"
+            target="_blank"
+            rel="noreferrer"
+            >Krillion Answers</a
+          >. <a href="/sources">Sources & scoring</a>. Independent game.
+        </p>
+      </section>
+    </main>
+    <footer>
+      <span>FRESH TRACKS © 2026</span><span>GOOD COMPANY. BETTER LINES.</span
+      ><span>SEE YOU AT THE BOTTOM. ↘</span>
+    </footer>
+    <dialog id="invite-dialog">
+      <button id="close-invite" class="dialog-close" aria-label="Close invite">
+        ×
+      </button>
+      <div class="eyebrow">BETTER WITH COMPANY</div>
+      <h2>Meet you on the mountain.</h2>
+      <p>
+        Send this link to a friend. They’ll join your run with the same seven
+        questions. You can invite before starting or between turns. Each skier
+        gets their own timer.
+      </p>
+      <label for="invite-link">Your invite link</label
+      ><input id="invite-link" readonly />
+      <div class="share-actions">
+        <button id="share" class="primary">SHARE INVITE ↗</button
+        ><button id="copy" class="secondary">COPY LINK</button>
+      </div>
+      <p class="invite-code">
+        Or share the code: <strong id="roomcode"></strong>
+      </p>
+      <p id="share-status" role="status"></p>
+    </dialog>
+    <script type="module" src="/app.js"></script>
+  </body>
 </html>
