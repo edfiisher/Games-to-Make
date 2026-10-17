@@ -1,43 +1,56 @@
-# Flat Dive
+# Fresh Tracks
 
-A private, browser-based game inspired by Krillion's seven-round rarity game, with replayable archived daily dives. It is not an exact remake and is not affiliated with Krillion.
+A skiing-themed rarity quiz: seven questions, 25 seconds per turn, and a skier who travels further down the mountain for rarer answers.
 
-## Play locally
+**Play:** https://flat-dive.onrender.com
 
-Requires Node.js 24 or newer. There are no external runtime dependencies.
+## Start a run
 
-```sh
-npm start
-```
+Press **Start a new run**. Solo play starts immediately: no account, name, room code or archive selection is required. Seven distinct questions are chosen automatically.
 
-Open port 3000 in your browser. Enter a name and leave the room code blank to create a room. Other players use the same server address and room code. On a shared home network, use the host computer's LAN address, with port 3000. The host computer must keep the server running, and its firewall must permit connections. The server listens on all interfaces. For Internet play, deploy it to a Node-compatible host with HTTPS; this repository has not been deployed.
+The game remembers questions you have encountered in this browser. Unseen questions come first. After you have seen the whole bank, the least recently played questions return. Questions not reached in an abandoned run are still considered unseen. New tabs and later visits open the start screen; reloading an unfinished run in the same tab resumes it. Reloading a completed run returns to the start screen.
 
-For a shared Internet address, follow [the hosting instructions](HOSTING.md).
-The included `render.yaml` prepares a free Render web service; it has not been
-deployed.
+Progress lives in this browser's local storage. Clearing site data, switching browsers or using another device starts a separate history. An unfinished run uses session storage and also requires its server room to remain alive.
 
-[Deploy on Render](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Fedfiisher%2FGames-to-Make)
+## Bring a friend
 
-Each player starts independently. The room creator chooses an archived date (or the independent practice set). Everyone joining that room gets the same seven prompts and sees the live scoreboard. Each prompt allows 25 seconds; unlisted answers can be retried until the timer expires. Valid answers earn 10, 15, 30, 60, 85 or 100 points. A point corresponds to ten metres of depth. The server enforces timers and scores. The answer sheets appear after the seventh round.
+During any solo run, choose **Invite a friend**. Send the invite through your device's share sheet (including messaging apps), or copy the link. Opening it automatically joins that run. Your friend then presses **Start my run** to start their own timer. A six-character code can also be entered under **Taking a friend along?** on the home screen.
 
-## Current limits
+Everyone receives the same seven questions in the same order. Each player has an independent 25-second timer, and the shared scoreboard appears when a second skier joins. Up to 12 players can join. Names are optional and can be set before joining or starting.
 
-- Included: seven daily dives (11–17 October 2026), 49 questions, and 52,342 recorded answer entries.
-- Four source questions have no recorded 100-point answer; the importer does not invent missing tiers.
-- The included archive covers the complete daily dives available through the companion site search at import time. This is not the entire historical Krillion archive. Replaying a date repeats its questions.
-- Archived answers and tiers are recorded by the independent companion site krillionanswers.com, not verified against the live Krillion validator. Aliases are not supplied by that endpoint. A valid answer or alternative spelling may be absent. The separately labelled practice set still uses locally curated tiers.
-- No automatic spelling correction, automatic daily updates, accounts, saved history, themed packs or exact visual assets.
-- Rooms and scores are in memory. Restarting the server clears them. The browser remembers a session only while the server retains it.
-- Private rooms use an invitation code, not account authentication. This prototype has no production abuse controls.
-- No public hosting deployment has been verified.
+## Questions and scoring
 
-REA 6.5.0 was used to inspect the public browser client. Reference downloads and analysis are outside this project, under `/workspace/reference`. The original answer database and server implementation were not obtained. The visible rules and tier values are documented in `RESEARCH.md`.
+The included bank has **82 distinct questions and 60,672 recorded answer entries**. It covers daily, general knowledge, film, sport and geography questions from the user-supplied companion site [Krillion Answers](https://krillionanswers.com/answer-finder/). Its 294 historical question records were deduplicated by question text, with the latest recorded answer set retained. Repeated historical records do not count as new questions.
 
-## Development
+Scoring preserves recorded tiers: 10, 15, 30, 60, 85 or 100 points; a miss earns zero. Each point means ten metres skied, up to 7,000 metres. The on-screen tier names use the new skiing theme. Correctly recorded answers end the turn; unlisted answers can be retried until the timer expires. Answer sheets with search are available after all seven turns.
+
+This is an independent game inspired by Krillion, not an exact remake or a live Krillion validator. Alternative spellings and answers absent from the recorded data may be rejected. The source endpoint does not provide aliases. Some questions have no recorded 100-point answer. The game does not invent missing tiers. The bank is finite; random combinations are not newly authored questions.
+
+## Run locally
+
+Requires Node.js 24 or newer. There are no third-party runtime dependencies.
 
 ```sh
 npm test
 npm start
 ```
 
-`data/archive.json` contains recorded questions, answer tiers and source links. Refresh manually with `node --use-env-proxy scripts/import-archive.js` (network access to krillionanswers.com required). Import checks counts and rejects partial dives before writing. `questions.js` owns the independent practice answer data. `server.js` owns rooms, deadlines and scoring. `public/` contains the browser interface. Set `PORT` to change the listening port (default 3000).
+The server listens on all interfaces on port 3000 (`PORT` overrides this). For a local home network, connect using the host computer's LAN address and port; the host must keep the server running and permit connections through its firewall. [Hosting instructions](HOSTING.md) explain the existing Render setup.
+
+## Development and data refresh
+
+- `server.js`: runs, invitations, deadlines and scoring.
+- `questions.js`: answer lookup and selection, preferring unseen questions.
+- `public/`: interface, mountain illustration, skier animation and device history.
+- `data/questions.json`: recorded answers, original tiers, source URLs and retrieval metadata.
+- `test/game.test.js`: solo, multiplayer, fresh selection, expiry, scoring and persistence tests.
+
+Refreshing the recorded data is optional and never needed to start the server:
+
+```sh
+node --use-env-proxy scripts/import-questions.js
+```
+
+The importer checks coverage against the companion site's reported index size, verifies answer counts and tier values, removes repeated questions and writes only after validation succeeds. If the source grows beyond the current search coverage, it stops rather than silently saving a partial refresh. It needs network access to krillionanswers.com; the included bank works without that access.
+
+Room state is in memory and clears on server restart or redeployment. Inactive rooms expire after six hours. Free Render hosting can sleep and take time to wake up. Device question history survives a server restart; active rooms and scores do not. Deploy one server instance because room state is not shared across instances.

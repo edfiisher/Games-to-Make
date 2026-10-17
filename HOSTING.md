@@ -1,35 +1,13 @@
-# Put the game online
+# Hosting Fresh Tracks
 
-The project is prepared for a Render web service. No hosting account has been
-connected and no deployment has been created.
+The existing game address is **https://flat-dive.onrender.com**. The service name remains `flat-dive` so the skiing update keeps the same address.
 
-1. Open [Deploy on Render](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Fedfiisher%2FGames-to-Make).
-2. Create or sign into a Render account. The link selects this GitHub project.
-3. If requested, connect GitHub and allow Render to read `Games-to-Make`.
-4. Render reads `render.yaml`. Review that it selects the **Free** plan before
-   creating the service. Do not select a paid plan unless you want one.
-5. After deployment succeeds, use the HTTPS address Render provides. Create a
-   room and share that address and the room code with your flatmates.
+`render.yaml` describes a free Render Node service. It builds with `node --version && npm test` and starts with `npm start`, using Node 24.19.0. The game reads Render's `PORT` automatically and needs no game API keys. A normal push to GitHub's `main` branch triggers deployment when automatic deploys are enabled in Render.
 
-If using **New → Web Service** instead, select Node, use
-`node --version && npm test` as the build command, `npm start` as the start
-command, and `NODE_VERSION=24.19.0` as an environment variable. The server reads
-Render's `PORT` automatically. No passwords or API keys are required by the game.
+For a new deployment, use [Deploy on Render](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Fedfiisher%2FGames-to-Make), sign in, connect the repository if requested, and select the Free plan. Do not create a second service merely to update the existing one.
 
-The free service can sleep when idle, so opening it may take a while. Rooms and
-scores are currently held in memory and disappear whenever the service restarts,
-including during a deployment. Choose one server instance; rooms are not shared
-across instances. A paid service and persistent storage are later improvements,
-not prerequisites to trying this version together.
+Free hosting may sleep when idle. Rooms and scores are in memory and disappear on restart or deployment. Inactive rooms expire after six hours. Browser question history is stored on each device and survives server restarts. Use one server instance; rooms are not shared between instances.
 
-Room codes provide an invitation mechanism, not a password-protected website.
-Anyone who has the game address can create a room. This is an early prototype,
-not a hardened public game platform.
+Anyone with the game address can start a solo run. Invite codes let friends join the same seven-question run but do not make the whole website password protected.
 
-## What gets uploaded
-
-Game source, the recorded archive data and its source attribution, tests, and
-documentation. The upstream REA checkout and raw investigation downloads are
-outside this repository and are not included. No credentials are required or
-included. Whether these files are publicly visible depends on the repository's
-GitHub visibility setting.
+After deployment, check `/api/info` for `name: "Fresh Tracks"`, `version: 2` and `questionCount: 82`, then verify starting solo, sharing an invitation, and scoring an answer. A successful deployment or open port alone does not verify those behaviours.

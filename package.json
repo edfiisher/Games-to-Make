@@ -1,1 +1,12 @@
-{"name":"flat-dive","private":true,"type":"module","scripts":{"start":"node server.js","test":"node --test"},"engines":{"node":">=24"}}
+{
+  "name": "fresh-tracks",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

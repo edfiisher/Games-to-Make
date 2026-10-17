@@ -2,58 +2,81 @@ import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {randomBytes} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
-import {questions,scores,judge} from './questions.js';
-import {readFileSync} from 'node:fs';
-const archive=JSON.parse(readFileSync(new URL('./data/archive.json',import.meta.url),'utf8'));
-const dives=[...archive.dives,{id:'practice',label:'Original practice set',questions}];
-const ROUND_MS=25000, MAX_BODY=4096;
-export function createGameServer({now=Date.now}={}) {
+import {questions,scores,judge,selectQuestions} from './questions.js';
+
+const ROUND_MS=25000, MAX_BODY=128*1024, ROOM_LIFETIME=6*60*60*1000;
+export function createGameServer({now=Date.now}={}){
  const rooms=new Map();
  const token=()=>randomBytes(16).toString('hex');
- function state(room,player){
-  if(player?.phase==='answering' && now()>=player.deadline)finish(room,player,null,null);
-  const completed=player?.results.length===7;
-  return {code:room.code,playerId:player?.id,phase:player?.phase,deadline:player?.deadline,serverNow:now(),round:player?.results.length??0,diveId:room.dive.id,diveLabel:room.dive.label,question:!completed&&player?{id:room.dive.questions[player.results.length].id,text:room.dive.questions[player.results.length].text}:null,results:player?.results??[],board:[...room.players.values()].map(p=>({name:p.name,score:p.results.reduce((s,r)=>s+r.score,0),rounds:p.results.length,done:p.results.length===7})).sort((a,b)=>b.score-a.score),...(completed?{answers:room.dive.questions.map(q=>({text:q.text,answers:q.answers.map(a=>({answer:a.answer,tier:a.tier,score:scores[a.tier]}))}))}:{})};
+ function advance(p){
+  p.revision++;
+  if(p.results.length===7){p.phase='done';return}
+  p.phase='answering';p.deadline=now()+ROUND_MS;p.roundId=token();
  }
- function finish(room,p,answer,raw){p.results.push({prompt:room.dive.questions[p.results.length].text,answer:answer?.answer??null,raw:raw??null,tier:answer?.tier??'miss',score:answer?scores[answer.tier]:0});p.phase='feedback';p.deadline=null}
+ function finish(room,p,answer,raw){
+  p.revision++;const q=room.questions[p.results.length];
+  p.results.push({questionId:q.id,prompt:q.text,answer:answer?.answer??null,raw:raw??null,tier:answer?.tier??'miss',score:answer?scores[answer.tier]:0});
+  p.phase=p.results.length===7?'done':'feedback';p.deadline=null;p.roundId=null;
+ }
+ function settle(room,p){if(p.phase==='answering'&&now()>=p.deadline)finish(room,p,null,null)}
+ function state(room,player,includeAnswers=true){
+  for(const p of room.players.values())settle(room,p);
+  const completed=player.results.length===7;
+  const active=player.phase==='answering'||player.phase==='intro';
+  return {revision:player.revision,code:room.code,playerId:player.id,name:player.name,phase:player.phase,deadline:player.deadline,roundId:player.roundId,serverNow:now(),round:player.results.length,freshCount:room.freshCount,bankSize:questions.length,
+   question:active?{id:room.questions[player.results.length].id,text:room.questions[player.results.length].text}:null,
+   playedIds:[...player.results.map(r=>r.questionId),...(player.phase==='answering'?[room.questions[player.results.length].id]:[])],
+   results:player.results,board:[...room.players.values()].map(p=>({name:p.name,isYou:p.id===player.id,score:p.results.reduce((s,r)=>s+r.score,0),rounds:p.results.length,done:p.results.length===7})).sort((a,b)=>b.score-a.score),
+   ...(completed&&includeAnswers?{answers:room.questions.map(q=>({text:q.text,source:q.source,answers:q.answers.map(a=>({answer:a.answer,tier:a.tier,score:scores[a.tier]}))}))}:{})};
+ }
+ function addPlayer(room,name){const p={id:token(),name:name?.trim()||`Skier ${randomBytes(2).toString('hex').toUpperCase()}`,results:[],revision:0,phase:'intro',deadline:null,roundId:null};room.players.set(p.id,p);return p}
  const server=http.createServer(async(req,res)=>{
-  const send=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(data))};
+  const send=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(data))};
   try{
    const url=new URL(req.url,'http://localhost');
-   if(url.pathname==='/api/dives'&&req.method==='GET')return send(200,{dives:dives.map(d=>({id:d.id,label:d.label,questions:d.questions.length,answerCount:d.questions.reduce((n,q)=>n+q.answers.length,0)}))});
+   if(url.pathname==='/api/info'&&req.method==='GET')return send(200,{name:'Fresh Tracks',version:2,questionCount:questions.length,rounds:7,roundSeconds:25});
    if(url.pathname.startsWith('/api/')){
     if(req.method!=='POST')return send(405,{error:'Use POST'});
     let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>MAX_BODY)return send(413,{error:'Request too large'})}
     let b;try{b=JSON.parse(body)}catch{return send(400,{error:'Invalid request'})}
-    if(!b||typeof b!=='object')return send(400,{error:'Invalid request'});
-    if(url.pathname==='/api/join'){
-     if(typeof b.name!=='string'||!b.name.trim()||b.name.length>24)return send(400,{error:'Enter a name (1–24 characters)'});
-     if(b.code!=null&&typeof b.code!=='string')return send(400,{error:'Invalid room code'});
-     const code=b.code?.trim().toUpperCase();let room;
-     if(code){room=rooms.get(code);if(!room)return send(404,{error:'Room not found. Check the code.'})}
-     else{if(rooms.size>=100)return send(503,{error:'Server full'});let c;do{c=randomBytes(3).toString('hex').toUpperCase()}while(rooms.has(c));const dive=dives.find(d=>d.id===(b.diveId??dives[0].id));if(!dive)return send(400,{error:'Choose an available dive'});room={code:c,dive,players:new Map()};rooms.set(c,room)}
-     if(room.players.size>=12)return send(409,{error:'Room full (12 players)'});
-     const p={id:token(),name:b.name.trim(),results:[],phase:'intro',deadline:null};room.players.set(p.id,p);return send(200,state(room,p));
+    if(!b||typeof b!=='object'||Array.isArray(b))return send(400,{error:'Invalid request'});
+    if(b.name!==undefined&&(typeof b.name!=='string'||b.name.length>24))return send(400,{error:'Names can be up to 24 characters'});
+    for(const [key,room] of rooms)if(now()-room.touchedAt>ROOM_LIFETIME)rooms.delete(key);
+    if(url.pathname==='/api/start'){
+     if(b.seen!==undefined&&(!Array.isArray(b.seen)||b.seen.length>3000||!b.seen.every(id=>typeof id==='string'&&id.length<=64)))return send(400,{error:'Invalid question history'});
+     if(rooms.size>=2000)return send(503,{error:'The mountain is busy. Please try again later.'});
+     const selection=selectQuestions(b.seen??[]);let code;do{code=randomBytes(3).toString('hex').toUpperCase()}while(rooms.has(code));
+     const room={code,...selection,players:new Map(),touchedAt:now()};rooms.set(code,room);
+     const p=addPlayer(room,b.name);advance(p);return send(200,state(room,p));
     }
-    const room=rooms.get(b.code),p=room?.players.get(b.playerId);if(!p)return send(404,{error:'Session not found. Join a room again.'});
-    state(room,p);
+    if(url.pathname==='/api/join'){
+     if(typeof b.code!=='string'||! /^[A-F0-9]{6}$/i.test(b.code.trim()))return send(400,{error:'Enter a six-character invite code'});
+     const room=rooms.get(b.code.trim().toUpperCase());if(!room)return send(404,{error:'This invite has expired. Ask your friend for a new one.'});
+     if(room.players.size>=12)return send(409,{error:'This run already has 12 skiers'});
+     room.touchedAt=now();const p=addPlayer(room,b.name);return send(200,state(room,p));
+    }
+    const room=rooms.get(b.code),p=room?.players.get(b.playerId);if(!p)return send(404,{error:'This run has expired. Start a fresh run.',expired:true});
+    room.touchedAt=now();settle(room,p);
     if(url.pathname==='/api/next'){
-     if(p.phase==='intro'||p.phase==='feedback') {if(p.results.length===7)p.phase='done';else{p.phase='answering';p.deadline=now()+ROUND_MS}}
-    }else if(url.pathname==='/api/answer'){
-     if(p.phase!=='answering')return send(409,{error:'Round ended',state:state(room,p)});
-     if(typeof b.answer!=='string'||b.answer.length>160)return send(400,{error:'Answer too long'});
-     const a=judge(room.dive.questions[p.results.length],b.answer);
-     if(a)finish(room,p,a,b.answer);else return send(200,{...state(room,p),rejected:'That answer is not in the recorded answer list. Try another.'});
-    }else if(url.pathname==='/api/skip'){
-     if(p.phase==='answering')finish(room,p,null,null);
+     if(p.phase==='intro'||p.phase==='feedback')advance(p);
+    }else if(url.pathname==='/api/answer'||url.pathname==='/api/skip'){
+     if(p.phase!=='answering'||b.roundId!==p.roundId)return send(409,{error:'That turn has ended.',state:state(room,p)});
+     if(url.pathname==='/api/skip')finish(room,p,null,null);
+     else{
+      if(typeof b.answer!=='string'||b.answer.length>160)return send(400,{error:'Answers can be up to 160 characters'});
+      const a=judge(room.questions[p.results.length],b.answer);
+      if(a)finish(room,p,a,b.answer);
+      else return send(200,{...state(room,p),rejected:'Not in the recorded answers. Try another before time runs out.'});
+     }
     }else if(url.pathname!=='/api/state')return send(404,{error:'Not found'});
-    return send(200,state(room,p));
+    return send(200,state(room,p,b.summary!==true));
    }
    if(req.method!=='GET')return send(405,{error:'Use GET'});
-   const files={'/':['index.html','text/html'],'/app.js':['app.js','text/javascript'],'/style.css':['style.css','text/css']};
+   const files={'/':['index.html','text/html'],'/app.js':['app.js','text/javascript'],'/style.css':['style.css','text/css'],'/progress.js':['progress.js','text/javascript']};
    const f=files[url.pathname];if(!f)return send(404,{error:'Not found'});
-   res.writeHead(200,{'Content-Type':f[1]+'; charset=utf-8','X-Content-Type-Options':'nosniff'});res.end(await readFile(new URL('./public/'+f[0],import.meta.url)));
-  }catch{if(!res.headersSent)send(500,{error:'Server error'});else res.end()}
+   const contents=await readFile(new URL('./public/'+f[0],import.meta.url));
+   res.writeHead(200,{'Content-Type':f[1]+'; charset=utf-8','Cache-Control':'no-cache','X-Content-Type-Options':'nosniff','Referrer-Policy':'same-origin'});res.end(contents);
+  }catch{if(!res.headersSent)send(500,{error:'Something went wrong. Please try again.'});else res.end()}
  });return server;
 }
-if(process.argv[1]===fileURLToPath(import.meta.url)){const port=Number(process.env.PORT??3000);createGameServer().listen(port,'0.0.0.0',()=>console.log(`Flat Dive listening on port ${port}`))}
+if(process.argv[1]===fileURLToPath(import.meta.url)){const port=Number(process.env.PORT??3000);createGameServer().listen(port,'0.0.0.0',()=>console.log(`Fresh Tracks listening on port ${port}`))}
