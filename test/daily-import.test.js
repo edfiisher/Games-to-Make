@@ -157,3 +157,37 @@ test("expanded public lists are accepted when every preview answer and score sti
   const saved = JSON.parse(await readFile(f.dataPath, "utf8"));
   assert.equal(saved.questions[1].answers.length, 3);
 });
+
+test("a stale preview can retain an identical saved list but cannot authorize a changed score", async (t) => {
+  const f = await fixture(t);
+  await syncDaily(f);
+  const saved = await readFile(f.dataPath, "utf8");
+  const stalePreview = async (url, options) => {
+    const response = await f.fetcher(url, options);
+    const body = (await response.text()).replace(
+      "data-answer='Answer 1' data-score='60'",
+      "data-answer='Answer 1' data-score='85'",
+    );
+    return { ok: true, text: async () => body };
+  };
+  const result = await syncDaily({ ...f, fetcher: stalePreview });
+  assert.equal(result.retainedConflicts, 1);
+  assert.equal(result.changed, false);
+  assert.equal(await readFile(f.dataPath, "utf8"), saved);
+  const changedAPI = async (url, options) => {
+    const response = await f.fetcher(url, options);
+    let body = await response.text();
+    if (new URL(url).searchParams.get("prompt")?.endsWith(":p1")) {
+      const payload = JSON.parse(body);
+      payload.answers[0] = {
+        ...payload.answers[0],
+        tier: "deepcut",
+        score: 85,
+      };
+      body = JSON.stringify(payload);
+    }
+    return { ok: true, text: async () => body };
+  };
+  await assert.rejects(syncDaily({ ...f, fetcher: changedAPI }), /disagree/);
+  assert.equal(await readFile(f.dataPath, "utf8"), saved);
+});

@@ -173,6 +173,7 @@ export async function syncDaily({
   let added = 0,
     updated = 0,
     expandedLists = 0,
+    retainedConflicts = 0,
     checkedAnswers = 0;
   for (const date of dates) {
     const prompts =
@@ -210,7 +211,19 @@ export async function syncDaily({
       const conflicts = prompt.preview.filter(
         (a) => publishedScores.get(a.answer) !== a.score,
       );
-      if (conflicts.length)
+      const key = normalize(prompt.text),
+        previous = merged.get(key);
+      if (conflicts.length) {
+        // A stale page preview must never change a known-good saved list.
+        // If the complete API list is identical to it, retain that saved list.
+        if (previous && answersEqual(previous.answers, answers)) {
+          retainedConflicts++;
+          checkedAnswers += answers.length;
+          console.warn(
+            "Preview conflict; retained the identical saved list: " + prompt.id,
+          );
+          continue;
+        }
         throw Error(
           "Daily answers disagree with the published preview: " +
             prompt.id +
@@ -223,10 +236,9 @@ export async function syncDaily({
               })),
             ),
         );
+      }
       if (answers.length > prompt.count) expandedLists++;
       checkedAnswers += answers.length;
-      const key = normalize(prompt.text),
-        previous = merged.get(key);
       if (
         previous?.recordedAt > date ||
         (previous && answersEqual(previous.answers, answers))
@@ -271,9 +283,17 @@ export async function syncDaily({
     }
   }
   console.log(
-    `${checkOnly ? "Check only" : "Daily import"}: ${dates.length} day(s) through ${throughDate}; ${checkedAnswers} validated answer entries, ${added} new questions, ${updated} changed lists, ${expandedLists} lists larger than the page count. ${throughDate < latestDate ? "More backlog remains for the next run." : "Caught up with the published source."}`,
+    `${checkOnly ? "Check only" : "Daily import"}: ${dates.length} day(s) through ${throughDate}; ${checkedAnswers} validated answer entries, ${added} new questions, ${updated} changed lists, ${expandedLists} lists larger than the page count, ${retainedConflicts} unchanged lists retained after preview conflicts. ${throughDate < latestDate ? "More backlog remains for the next run." : "Caught up with the published source."}`,
   );
-  return { added, updated, changed, checkedAnswers, throughDate, latestDate };
+  return {
+    added,
+    updated,
+    changed,
+    checkedAnswers,
+    throughDate,
+    latestDate,
+    retainedConflicts,
+  };
 }
 if (
   process.argv[1] &&
