@@ -70,9 +70,16 @@ export function parseDailyPage(html, expectedDate, expectedNumber = null) {
     const countText = attribute(tag, "data-total");
     const count = Number(countText);
     const prefix = `/answers/daily/${match[1]}/p${match[2]}-`;
-    const link = [...body.matchAll(/<a\b([^>]*)>/gi)]
-      .map((m) => attribute(m[1], "href"))
-      .find((href) => href?.startsWith(prefix));
+    const link =
+      [...body.matchAll(/<a\b([^>]*)>/gi)]
+        .map((m) => attribute(m[1], "href"))
+        .find((href) => href?.startsWith(prefix)) ??
+      (expectedNumber
+        ? [...html.matchAll(/<link\b([^>]*)>/gi)]
+            .filter((m) => attribute(m[1], "rel") === "canonical")
+            .map((m) => attribute(m[1], "href"))
+            .find((href) => href?.startsWith(origin + prefix))
+        : null);
     if (
       !text ||
       text.length > 500 ||

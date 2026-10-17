@@ -72,6 +72,11 @@ async function fixture(
       body = [...page(day).matchAll(/<details[\s\S]*?<\/details>/g)][
         number - 1
       ][0];
+      body =
+        '<link rel="canonical" href="' +
+        url +
+        '">' +
+        body.replace(/<a[^>]*>Full list<\/a>/, "");
     } else if (u.pathname.startsWith("/archive/"))
       body = page(u.pathname.split("/")[2]);
     else {
