@@ -15,7 +15,9 @@ After deployment, check `/api/info` for `name: "Fresh Tracks"`, `version: 4` and
 
 ## Daily question updates
 
-The workflow in `.github/workflows/daily-questions.yml` runs at 06:17 UTC daily (07:17 during British Summer Time). Once it is on `main`, open **GitHub → Games-to-Make → Actions → Daily question bank update → Run workflow** for an initial check. The workflow requires Actions to be enabled and permission to push repository contents. Repository protection rules may prevent its direct commits. A green run with no new public records is normal and makes no commit.
+The workflow in `.github/workflows/daily-questions.yml` is installed, but **its daily schedule is paused**. The first real GitHub-hosted run on 17 October 2026 received HTTP 403 from the companion's public page: [run and logs](https://github.com/edfiisher/Games-to-Make/actions/runs/39059371537). The public import worked from this workspace. Do not treat the schedule as operational or bypass the source's access restriction.
+
+A permitted feed or automated access from the source is needed before re-enabling the commented 06:17 UTC schedule (07:17 during British Summer Time). After access is resolved, use **GitHub → Games-to-Make → Actions → Public question bank update → Run workflow** for an initial check, then enable the schedule. The workflow needs Actions enabled and permission to push repository contents. Repository protection rules may prevent direct commits. A successful run with no new public records makes no commit.
 
 A successful import changes the files in GitHub; Render must then deploy that commit. For the existing `flat-dive` service, enable automatic deploys from `main` in Render, or use **Manual Deploy → Deploy latest commit**. Do not create another service. Confirm `/api/info` reports the expected version and bank size after deployment.
 

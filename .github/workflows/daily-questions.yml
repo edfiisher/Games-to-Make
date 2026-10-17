@@ -1,7 +1,9 @@
-name: Daily question bank update
+name: Public question bank update
 on:
-  schedule:
-    - cron: "17 6 * * *"
+  # Daily schedule paused: the companion returns HTTP 403 to GitHub runners.
+  # Enable only when a permitted feed or source access is available.
+  # schedule:
+  #   - cron: "17 6 * * *"
   workflow_dispatch:
 permissions:
   contents: write
