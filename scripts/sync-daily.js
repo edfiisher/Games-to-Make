@@ -51,7 +51,7 @@ function validDate(value) {
     new Date(value + "T00:00:00Z").toISOString().slice(0, 10) === value
   );
 }
-export function parseDailyPage(html, expectedDate) {
+export function parseDailyPage(html, expectedDate, expectedNumber = null) {
   const prompts = [];
   for (const [, tag, body] of html.matchAll(
     /<details\b([^>]*)>([\s\S]*?)<\/details\s*>/gi,
@@ -108,13 +108,19 @@ export function parseDailyPage(html, expectedDate) {
     });
   }
   const dates = new Set(prompts.map((p) => p.date));
+  const expectedCount = expectedNumber ? 1 : 7;
   if (
-    prompts.length !== 7 ||
-    new Set(prompts.map((p) => p.number)).size !== 7 ||
+    prompts.length !== expectedCount ||
+    new Set(prompts.map((p) => p.number)).size !== expectedCount ||
     dates.size !== 1 ||
-    new Set(prompts.map((p) => normalize(p.text))).size !== 7
+    new Set(prompts.map((p) => normalize(p.text))).size !== expectedCount ||
+    (expectedNumber && prompts[0].number !== expectedNumber)
   )
-    throw Error("Incomplete daily page: expected seven distinct dated prompts");
+    throw Error(
+      expectedNumber
+        ? "Incomplete question page: expected the specified dated prompt"
+        : "Incomplete daily page: expected seven distinct dated prompts",
+    );
   if (expectedDate && !prompts.every((p) => p.date === expectedDate))
     throw Error("Daily page date mismatch");
   return prompts.sort((a, b) => a.number - b.number);
@@ -174,6 +180,7 @@ export async function syncDaily({
     updated = 0,
     expandedLists = 0,
     retainedConflicts = 0,
+    confirmedQuestionPages = 0,
     checkedAnswers = 0;
   for (const date of dates) {
     const prompts =
@@ -224,17 +231,31 @@ export async function syncDaily({
           );
           continue;
         }
-        throw Error(
-          "Daily answers disagree with the published preview: " +
-            prompt.id +
-            " " +
-            JSON.stringify(
-              conflicts.map((a) => ({
-                answer: a.answer,
-                previewScore: a.score,
-                apiScore: publishedScores.get(a.answer) ?? null,
-              })),
-            ),
+        // The site's homepage may lag its full, dated question page.
+        // A changed list needs independent corroboration from that page.
+        const questionPage = parseDailyPage(
+          await get(prompt.source),
+          date,
+          prompt.number,
+        )[0];
+        if (
+          questionPage.id !== prompt.id ||
+          normalize(questionPage.text) !== key ||
+          answers.length < questionPage.count ||
+          questionPage.preview.some(
+            (a) => publishedScores.get(a.answer) !== a.score,
+          )
+        )
+          throw Error(
+            "Daily answers disagree with the published preview and question page: " +
+              prompt.id +
+              " " +
+              JSON.stringify(conflicts),
+          );
+        confirmedQuestionPages++;
+        console.warn(
+          "Stale homepage preview; API scores confirmed against the dated question page: " +
+            prompt.id,
         );
       }
       if (answers.length > prompt.count) expandedLists++;
@@ -283,7 +304,7 @@ export async function syncDaily({
     }
   }
   console.log(
-    `${checkOnly ? "Check only" : "Daily import"}: ${dates.length} day(s) through ${throughDate}; ${checkedAnswers} validated answer entries, ${added} new questions, ${updated} changed lists, ${expandedLists} lists larger than the page count, ${retainedConflicts} unchanged lists retained after preview conflicts. ${throughDate < latestDate ? "More backlog remains for the next run." : "Caught up with the published source."}`,
+    `${checkOnly ? "Check only" : "Daily import"}: ${dates.length} day(s) through ${throughDate}; ${checkedAnswers} validated answer entries, ${added} new questions, ${updated} changed lists, ${expandedLists} lists larger than the page count, ${retainedConflicts} unchanged lists retained, ${confirmedQuestionPages} stale previews checked against the full question page. ${throughDate < latestDate ? "More backlog remains for the next run." : "Caught up with the published source."}`,
   );
   return {
     added,
@@ -293,6 +314,7 @@ export async function syncDaily({
     throughDate,
     latestDate,
     retainedConflicts,
+    confirmedQuestionPages,
   };
 }
 if (

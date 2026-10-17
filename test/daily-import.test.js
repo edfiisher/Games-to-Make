@@ -24,6 +24,7 @@ async function fixture(
     badTier = false,
     extra = false,
     mismatch = false,
+    staleHome = false,
   } = {},
 ) {
   const directory = await mkdtemp(join(tmpdir(), "daily-public-"));
@@ -58,8 +59,20 @@ async function fixture(
     const u = new URL(url);
     assert.equal(u.origin, origin);
     let body;
-    if (u.pathname === "/") body = page(latest);
-    else if (u.pathname.startsWith("/archive/"))
+    if (u.pathname === "/")
+      body = staleHome
+        ? page(latest).replace(
+            "data-answer='Answer 1' data-score='60'",
+            "data-answer='Answer 1' data-score='85'",
+          )
+        : page(latest);
+    else if (u.pathname.startsWith("/answers/daily/")) {
+      const number = Number(u.pathname.match(/\/p([1-7])-/)[1]);
+      const day = u.pathname.split("/")[3];
+      body = [...page(day).matchAll(/<details[\s\S]*?<\/details>/g)][
+        number - 1
+      ][0];
+    } else if (u.pathname.startsWith("/archive/"))
       body = page(u.pathname.split("/")[2]);
     else {
       assert.equal(u.pathname, "/api/answers/");
@@ -190,4 +203,14 @@ test("a stale preview can retain an identical saved list but cannot authorize a 
   };
   await assert.rejects(syncDaily({ ...f, fetcher: changedAPI }), /disagree/);
   assert.equal(await readFile(f.dataPath, "utf8"), saved);
+});
+
+test("a changed list with a stale homepage preview needs agreement from its full dated question page", async (t) => {
+  const f = await fixture(t, { staleHome: true });
+  const result = await syncDaily(f);
+  assert.equal(result.updated, 1);
+  assert.equal(result.confirmedQuestionPages, 1);
+  assert.ok(
+    f.requests.some((u) => u.includes("/answers/daily/2026-10-17/p1-item/")),
+  );
 });
