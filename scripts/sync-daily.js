@@ -207,9 +207,21 @@ export async function syncDaily({
       const publishedScores = new Map(
         payload.answers.map((a) => [a.answer, a.score]),
       );
-      if (prompt.preview.some((a) => publishedScores.get(a.answer) !== a.score))
+      const conflicts = prompt.preview.filter(
+        (a) => publishedScores.get(a.answer) !== a.score,
+      );
+      if (conflicts.length)
         throw Error(
-          "Daily answers disagree with the published preview: " + prompt.id,
+          "Daily answers disagree with the published preview: " +
+            prompt.id +
+            " " +
+            JSON.stringify(
+              conflicts.map((a) => ({
+                answer: a.answer,
+                previewScore: a.score,
+                apiScore: publishedScores.get(a.answer) ?? null,
+              })),
+            ),
         );
       if (answers.length > prompt.count) expandedLists++;
       checkedAnswers += answers.length;
