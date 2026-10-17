@@ -2,7 +2,7 @@
 
 A skiing-themed rarity quiz: seven questions, 25 seconds per turn, and a skier who travels further down the mountain for rarer answers.
 
-**Play:** https://flat-dive.onrender.com
+**Play:** https://counterline.onrender.com
 
 ## Start a run
 
@@ -28,7 +28,7 @@ The included bank has **200 distinct questions and 62,195 answer entries**: 79 r
 
 Recorded questions preserve their published tiers: 10, 15, 30, 60, 85 or 100 points; a miss earns zero. Each point means ten metres skied, up to 7,000 metres. The score guide explains all six tiers; results and the shared scoreboard show points, while the mountain shows distance. Correctly recorded answers end the turn; unlisted answers can be retried until the timer expires. Answer sheets with search are available after all seven turns.
 
-This is an independent game inspired by Krillion, not an exact remake or a live Krillion validator. Case, accents and punctuation are normalized. Known alternate names and close spellings are offered as a **Did you mean…?** correction. For example, gondola suggests Cable car station for the station question. **Accept & submit** scores the recorded answer; **Keep typing** dismisses it. Corrections retain the original deadline and must be accepted before time runs out. Ambiguous or unrelated guesses are not converted into arbitrary answers. The source endpoint does not provide aliases; supported alternate names are maintained locally, so unknown synonyms may still be rejected. Some questions have no recorded 100-point answer. Recorded questions do not acquire invented tiers. Our original questions use **house rarity tiers**, based on offline English word frequency as a familiarity proxy, with one designated gem per set. These are not measured player popularity or official Krillion scores. Question notes and the [sources page](https://flat-dive.onrender.com/sources) explain scope and scoring; [data provenance](data/SOURCES.md) retains source and license details. The bank is finite.
+This is an independent game inspired by Krillion, not an exact remake or a live Krillion validator. Case, accents and punctuation are normalized. Known alternate names and close spellings are offered as a **Did you mean…?** correction. For example, gondola suggests Cable car station for the station question. **Accept & submit** scores the recorded answer; **Keep typing** dismisses it. Corrections retain the original deadline and must be accepted before time runs out. Ambiguous or unrelated guesses are not converted into arbitrary answers. The source endpoint does not provide aliases; supported alternate names are maintained locally, so unknown synonyms may still be rejected. Some questions have no recorded 100-point answer. Recorded questions do not acquire invented tiers. Our original questions use **house rarity tiers**, based on offline English word frequency as a familiarity proxy, with one designated gem per set. These are not measured player popularity or official Krillion scores. Question notes and the [sources page](https://counterline.onrender.com/sources) explain scope and scoring; [data provenance](data/SOURCES.md) retains source and license details. The bank is finite.
 
 ## Run locally
 
@@ -68,7 +68,7 @@ The daily importer reads [Krillion Game](https://krillion-game.com/), its dated 
 
 `.github/workflows/daily-questions.yml` is **enabled at 06:17 UTC daily** (07:17 during British Summer Time, 06:17 in winter). Its [first successful hosted run](https://github.com/edfiisher/Games-to-Make/actions/runs/39061519874) fetched and validated 4,108 answer entries, passed all 30 tests, and pushed the updated bank. It refreshes changed lists and adds distinct new prompts; repeated questions are not counted as new. A saved checkpoint avoids rescanning the entire archive. An identical same-day import makes no commit. Checkpoint-only commits carry `[skip render]`, avoiding needless deployment; changed playable banks use a normal commit.
 
-Enable **Render → flat-dive → Settings → Auto-Deploy → On Commit** once to deploy future bank commits automatically. See [hosting](HOSTING.md). The workflow is operational on GitHub; the actual Render dashboard setting still needs checking by the account owner. Schedules are best effort, source formats can change, and GitHub can disable public-repository schedules after 60 days without activity.
+The live service is **counterline**. Its **Render → Settings → Auto-Deploy → On Commit** setting controls automatic deployment of future bank commits. See [hosting](HOSTING.md). The workflow is operational on GitHub; dashboard settings cannot be inspected from this workspace. Schedules are best effort, source formats can change, and GitHub can disable public-repository schedules after 60 days without activity.
 
 To grow toward 1,000, add clearly scoped sets with authoritative sources and alternate names to the definitions, regenerate familiarity values offline with `scripts/rate-house.py` (authoring-only dependency: `wordfreq==3.1.1`), rebuild, review the answer sets and run tests. Avoid counting paraphrases as new questions. Runtime requires neither Python nor wordfreq. New recorded questions can grow the bank automatically; original questions still need factual review.
 

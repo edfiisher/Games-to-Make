@@ -1,10 +1,10 @@
 # Hosting Counterline
 
-The existing game address is **https://flat-dive.onrender.com**. The game is named Counterline; the Render service remains `flat-dive` to keep existing links and browser history working.
+The live game address is **https://counterline.onrender.com**, on the Render service **counterline**. Use this address for new games and invitations.
 
-`render.yaml` describes a free Render Node service. It builds with `node --version && npm test` and starts with `npm start`, using Node 24.19.0. The game reads Render's `PORT` automatically and needs no game API keys. A normal push to GitHub's `main` branch triggers deployment when automatic deploys are enabled in Render.
+The service uses Node 24.19.0, builds with `npm test` and starts with `npm start`. The game reads Render's `PORT` automatically and needs no game API keys. A normal push to GitHub's `main` branch triggers deployment when automatic deploys are enabled in Render.
 
-For a new deployment, use [Deploy on Render](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Fedfiisher%2FGames-to-Make), sign in, connect the repository if requested, and select the Free plan. Do not create a second service merely to update the existing one.
+The owner created the Counterline service through Render's dashboard using the same GitHub repository. Update that service for future releases. The root `render.yaml` still describes the earlier `flat-dive` Blueprint; it has been left unchanged to avoid altering a separate service. Do not apply it as the configuration for the new service. The [address guide](docs/CHANGE-ADDRESS.md) records its dashboard settings.
 
 Free hosting may sleep when idle. Rooms and scores are in memory and disappear on restart or deployment. Inactive rooms expire after six hours. Browser question history is stored on each device and survives server restarts. Use one server instance; rooms are not shared between instances.
 
@@ -21,12 +21,12 @@ The previous provider, krillionanswers.com, returned HTTP 403 to GitHub; it is n
 
 ## Automatic Render deployment
 
-One-time dashboard setup for the existing service:
+Dashboard settings for the Counterline service:
 
-1. Open Render → **flat-dive → Settings**.
+1. Open Render → **counterline → Settings**.
 2. Under **Build & Deploy**, confirm the connected GitHub repository is `edfiisher/Games-to-Make`, branch **main**.
 3. Set **Auto-Deploy → On Commit** and save.
-4. For the current release, use **Manual Deploy → Deploy latest commit** once, then check `/api/info` for Counterline, version 5 and at least 200 questions.
+4. If a release has not deployed, use **Manual Deploy → Deploy latest commit**, then check `/api/info` for Counterline, version 5 and at least 200 questions. The current release is already live at the address above.
 
 After that, the flow is: scheduled GitHub import → validate data and run tests → commit changed bank → Render deploys that commit. No daily manual deploy is needed. The game loads its bank at startup, so merely writing a file to GitHub does not change an already running server.
 
@@ -34,8 +34,8 @@ Choose **On Commit** for this setup. GitHub's built-in workflow token does not t
 
 A checkpoint-only commit includes `[skip render]`; no change to playable content means no unnecessary deployment. Real bank changes use a normal commit. Active rooms reset on deployment because they are in memory; browser question history survives. The import is scheduled in the morning to reduce disruption.
 
-Automatic deployment requires Render's GitHub connection. A service configured only with a public repository URL must first be linked through the Git provider connection; see [Render's deployment documentation](https://render.com/docs/deploys). `render.yaml` explicitly sets `autoDeployTrigger: commit`, but an existing service that is not managed by that Blueprint still needs its dashboard setting changed.
+Automatic deployment requires Render's GitHub connection. A service configured only with a public repository URL must first be linked through the Git provider connection; see [Render's deployment documentation](https://render.com/docs/deploys). The new service was created separately from the old Blueprint, so its dashboard settings apply. Those settings cannot be inspected from this workspace.
 
 ## Free Counterline address
 
-The selected next address is a free Counterline-branded Render subdomain. The [address change guide](docs/CHANGE-ADDRESS.md) provides exact settings for a new free service using the same GitHub repository. The target hostname is subject to availability and has not yet been provisioned. Keep the existing flat-dive service until the new address has been verified.
+**https://counterline.onrender.com** is now live. Invitations automatically use this hostname. The old flat-dive service has not been deleted or redirected. Rooms and browser history are separate between the two addresses; use Counterline for new games.

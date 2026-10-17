@@ -1,6 +1,6 @@
 # Counterline review
 
-17 October 2026. Scores are design and engineering judgments, not measured player satisfaction. The baseline is the 200-question GitHub version before this work; the public Render site was still on an older version during verification. A 10 would require stronger evidence from real players and production use.
+17 October 2026. Scores are design and engineering judgments, not measured player satisfaction. The baseline is the 200-question GitHub version before this work. The release was first tested locally, then verified live at https://counterline.onrender.com after the owner created the new service. A 10 would require stronger evidence from real players and production use.
 
 | Area | Before /10 | After /10 | Findings, plan and implemented changes |
 | --- | ---: | ---: | --- |
@@ -21,7 +21,7 @@
 | Runtime speed and storage | 8 | 9 | Preserve the offline compact bank, bounded lazy matching and pagination. Added: in-process static file cache and content ETags with 304 revalidation; API state is always no-store. Local profile: 49ms bank load, 51MiB initial RSS, 196MiB peak after indexing every question, 3.6MB compiled bank. These are local measurements, not production capacity guarantees. |
 | Server validation and reliability | 8 | 8 | Retain server-controlled deadlines, scoring, correction IDs, request limits and room expiry. Added: authenticated, length-checked name changes blocked during timed turns; regression coverage for forged tokens and unchanged deadlines. In-memory rooms still disappear on restart. |
 | Imports and scheduling | 3 | 8 | Follow-up research found a reachable public alternative. The daily importer validates dates, counts, scores, previews and canonical answer pages, retains old data, catches up missed days and rejects unresolved contradictions. A real hosted run passed all 30 tests and pushed the bank; the 06:17 UTC schedule is enabled. Third-party availability and source changes still need monitoring. |
-| Hosting and maintenance | 6 | 6 | Correct branding, icon, deployment checks and source-access documentation. Code is ready for the existing Render service; owner dashboard access is still needed to deploy. Free-service sleep and in-memory rooms remain. |
+| Hosting and maintenance | 6 | 8 | Counterline is live at its new free Render address. Verified the API, a complete solo run, untimed readiness, new-hostname invitations and mobile layouts. Project links and hosting instructions use the new address. Dashboard auto-deploy settings cannot be inspected from this workspace. Free-service sleep and in-memory rooms remain. |
 
 ## Verification
 
@@ -31,13 +31,14 @@
 - **Zero axe violations in 12 states:** home, expanded scoring help, ready, invite dialog, answering, correction, feedback, final results, expanded answer sheet, sources, mobile group invitation and mobile answering. Rules cover WCAG A/AA and best-practice checks; this does not certify every accessibility requirement.
 - Layouts checked at **320, 390, 768 and 1440 CSS pixels**. Mobile start controls are visible without scrolling. Screenshots were visually inspected.
 - All six reward profiles, larger rare celebrations, correction reload/decline/confirm, no browser exceptions and reduced-motion behavior passed the separate animation suite.
+- **Production verification:** https://counterline.onrender.com reports Counterline, version 5 and 200 questions. A real browser completed seven scored answers, joined a friend through a link on the new hostname, renamed the guest, confirmed a correction, paged answer sheets and recovered from a simulated sheet-request failure. The ready screen remained untimed after 27 seconds. All 12 accessibility scans passed again on the live service, with no browser exceptions or horizontal overflow at 320–1440px.
 
 ## Remaining work, in priority order
 
-1. **Deploy in Render:** Manual Deploy → Deploy latest commit; check `/api/info` for Counterline, version 5 and at least 200 questions. Enable automatic deploys from main if desired. This review tests the local release; it does not claim the old live site already has these changes.
+1. **Automatic deployment:** the current release is deployed and verified. Future bank changes depend on the counterline service's GitHub connection and **Auto-Deploy → On Commit** setting; dashboard configuration cannot be inspected here. See [hosting](../HOSTING.md).
 2. **Monitor the daily source:** the former blocked provider has been replaced with a verified public alternative. The schedule is enabled; check Actions if source formatting or score consistency changes. [Current import status](IMPORT-ACCESS.md).
 3. **Improve content breadth:** prioritize history, arts, everyday objects and other underrepresented topics; review broad legacy answer lists in batches. Keep exact scope/source notes and avoid counting paraphrases as extra questions. Growing to 1,000 needs editorial work, not just recombining the existing sets.
 4. **Observe real play:** test on iOS/Safari with the on-screen keyboard and a screen reader, collect confusing corrections and add reviewed aliases. Automated Chromium checks cannot establish those results.
 5. **Persistence and availability if needed:** moving rooms to shared durable storage and avoiding host idle sleep would require hosting changes. No paid service or new account was created during this review.
 
-Follow-up on 17 October: [hosted run 39061519874](https://github.com/edfiisher/Games-to-Make/actions/runs/39061519874) successfully validated public alternative data, passed 30 tests and committed the bank. The bank remains 200 distinct questions, with 62,195 answer entries after list updates. The Render dashboard setting remains an owner action.
+Follow-up on 17 October: [hosted run 39061519874](https://github.com/edfiisher/Games-to-Make/actions/runs/39061519874) successfully validated public alternative data, passed 30 tests and committed the bank. The bank remains 200 distinct questions, with 62,195 answer entries after list updates. A second run made no changes, confirming same-day idempotence. The new Counterline address passed the production checks above; Render dashboard settings were not independently inspected.
