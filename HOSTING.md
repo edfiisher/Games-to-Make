@@ -10,4 +10,4 @@ Free hosting may sleep when idle. Rooms and scores are in memory and disappear o
 
 Anyone with the game address can start a solo run. Invite codes let friends join the same seven-question run but do not make the whole website password protected.
 
-After deployment, check `/api/info` for `name: "Fresh Tracks"`, `version: 2` and `questionCount: 82`, then verify starting solo, sharing an invitation, and scoring an answer. A successful deployment or open port alone does not verify those behaviours.
+After deployment, check `/api/info` for `name: "Fresh Tracks"`, `version: 3` and `questionCount: 82`, then verify the untimed ready screen, starting the timer, sharing an invitation before a turn, confirming a suggested correction, and scoring an answer. A successful deployment or open port alone does not verify those behaviours.

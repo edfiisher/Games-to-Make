@@ -34,16 +34,14 @@
     <g transform="translate(320 115)"><path d="M0 0v38" stroke="#173c42" stroke-width="3"/><path d="M0 0h31l-8 9 8 9H0Z" fill="#df643f"/><text x="43" y="18" class="map-label">THE SUMMIT</text></g>
     <g transform="translate(572 610)"><path d="M-5 0v34M35 0v34" stroke="#173c42" stroke-width="3"/><path d="M-5 0h40v13H-5Z" fill="#173c42"/><text x="16" y="52" text-anchor="middle" class="map-label">THE VALLEY</text></g>
     <g transform="translate(520 592)"><path d="M-25 0h49v36h-49Z" fill="#b9754e"/><path d="m-34 0 34-27L34 0Z" fill="#25494c"/><path d="m-34-2 34-28L34-2l-20-5L0-20l-14 13Z" fill="#fffdf5"/><path d="M-5 14H7v22H-5Z" fill="#4b4038"/><path d="M-17 10h8v9h-8ZM12 10h8v9h-8Z" fill="#ffd98a"/></g>
-    <g id="skier" filter="url(#skier-shadow)" transform="translate(340 157)">
-     <ellipse cy="24" rx="22" ry="5" fill="#607f8333"/>
-     <path d="m-18 20 38 7m-37-1 38 7" stroke="#173c42" stroke-width="3" stroke-linecap="round"/>
-     <path d="m-6 6 12 5-9 11m8-11 9 10" fill="none" stroke="#274956" stroke-width="5" stroke-linecap="round"/>
-     <path d="m2-11-9 16 13 6 5-12Z" fill="#ed7048"/>
-     <path d="m1-5-14 6-9 20M5-4l14 6 6 21" fill="none" stroke="#304a50" stroke-width="2" stroke-linecap="round"/>
-     <circle cy="-19" r="8" fill="#25424b"/><path d="m-6-19 12 2" stroke="#ffdba2" stroke-width="4"/>
+    <g id="snow-particles" aria-hidden="true"></g>
+    <g id="skier" transform="translate(340 157)">
+     <ellipse id="ski-shadow" cy="4" rx="27" ry="7" fill="#284f5940"/>
+     <g id="skier-motion"><g id="skier-art"><image href="/assets/skier.png" x="-65" y="-118" width="135" height="135"/></g></g>
     </g>
     <g class="contour" fill="none" stroke="#fff" stroke-opacity=".38"><path d="M20 650Q120 575 241 619M660 343q70 10 117 92M32 389q80-20 140 12M490 149l70 47"/></g>
    </svg>
+   <div id="descent-callout" class="descent-callout" role="status" hidden><span id="descent-title"></span><strong id="descent-distance"></strong></div>
    <div class="mountain-bottom"><span>7 TURNS / 7,000 METRES</span><span>RARE ANSWERS. LONGER LINES. ↘</span></div>
   </section>
   <section class="play-panel">
@@ -54,7 +52,7 @@
     <div class="run-card"><svg class="run-card-icon" viewBox="0 0 28 28" aria-hidden="true"><path d="m5 5 18 18M8 23h15V8" fill="none" stroke="currentColor" stroke-width="2"/></svg><div><strong>Your next run is ready.</strong><p id="bank-note">New turns, every time you play.</p></div></div>
     <button id="start" class="primary">START A NEW RUN <span>↘</span></button>
     <p class="solo-note">Just you and the mountain. No sign-up needed.</p>
-    <details class="friends"><summary>Taking a friend along? <span>＋</span></summary><p>Start a solo run, then share an invite. Or join a friend here.</p><label for="name">Your name <span>optional</span></label><input id="name" maxlength="24" autocomplete="nickname" placeholder="A name for the leaderboard"><form id="joinform"><label for="code">Have an invite code?</label><div class="input-row"><input id="code" maxlength="6" placeholder="ABC123" autocomplete="off" aria-label="Invite code"><button type="submit" class="secondary">JOIN RUN →</button></div></form></details>
+    <details class="friends"><summary>Taking a friend along? <span>＋</span></summary><p>Prepare a run, share an invite, then start your timer. Or join a friend here.</p><label for="name">Your name <span>optional</span></label><input id="name" maxlength="24" autocomplete="nickname" placeholder="A name for the leaderboard"><form id="joinform"><label for="code">Have an invite code?</label><div class="input-row"><input id="code" maxlength="6" placeholder="ABC123" autocomplete="off" aria-label="Invite code"><button type="submit" class="secondary">JOIN RUN →</button></div></form></details>
     <div class="how"><span>01 <b>Read the question.</b></span><span>02 <b>Think off-piste.</b></span><span>03 <b>Let it run.</b></span></div>
    </section>
    <section id="game" hidden>
@@ -69,7 +67,7 @@
   </section>
  </main>
  <footer><span>FRESH TRACKS © 2026</span><span>GOOD COMPANY. BETTER LINES.</span><span>SEE YOU AT THE BOTTOM. ↘</span></footer>
- <dialog id="invite-dialog"><button id="close-invite" class="dialog-close" aria-label="Close invite">×</button><div class="eyebrow">BETTER WITH COMPANY</div><h2>Meet you on the mountain.</h2><p>Send this link to a friend. They’ll join your run with the same seven questions. Each skier gets their own timer.</p><label for="invite-link">Your invite link</label><input id="invite-link" readonly><div class="share-actions"><button id="share" class="primary">SHARE INVITE ↗</button><button id="copy" class="secondary">COPY LINK</button></div><p class="invite-code">Or share the code: <strong id="roomcode"></strong></p><p id="share-status" role="status"></p></dialog>
+ <dialog id="invite-dialog"><button id="close-invite" class="dialog-close" aria-label="Close invite">×</button><div class="eyebrow">BETTER WITH COMPANY</div><h2>Meet you on the mountain.</h2><p>Send this link to a friend. They’ll join your run with the same seven questions. You can invite before starting or between turns. Each skier gets their own timer.</p><label for="invite-link">Your invite link</label><input id="invite-link" readonly><div class="share-actions"><button id="share" class="primary">SHARE INVITE ↗</button><button id="copy" class="secondary">COPY LINK</button></div><p class="invite-code">Or share the code: <strong id="roomcode"></strong></p><p id="share-status" role="status"></p></dialog>
  <script type="module" src="/app.js"></script>
 </body>
 </html>
