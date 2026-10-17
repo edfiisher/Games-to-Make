@@ -3,6 +3,7 @@ services:
     name: flat-dive
     runtime: node
     plan: free
+    autoDeployTrigger: commit
     buildCommand: node --version && npm test
     startCommand: npm start
     healthCheckPath: /

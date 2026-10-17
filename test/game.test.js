@@ -228,7 +228,10 @@ test("recorded question bank has distinct questions, valid source attribution an
   for (const q of questions) {
     assert.match(q.source, /^https:\/\//);
     if (q.scoring === "recorded")
-      assert.match(q.source, /^https:\/\/krillionanswers.com\/questions\//);
+      assert.match(
+        q.source,
+        /^https:\/\/(?:krillionanswers\.com\/questions\/|krillion-game\.com\/answers\/daily\/)/,
+      );
     assert.ok(q.answers.length);
     for (const a of q.answers) {
       assert.ok(a.answer.trim());
