@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: flat-dive
+    runtime: node
+    plan: free
+    buildCommand: node --version && npm test
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
