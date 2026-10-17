@@ -15,14 +15,23 @@ After deployment, check `/api/info` for `name: "Counterline"`, `version: 5` and 
 
 ## Daily question updates
 
-The workflow in `.github/workflows/daily-questions.yml` is installed, but **its daily schedule is paused**. The first real GitHub-hosted run on 17 October 2026 received HTTP 403 from the companion's public page: [run and logs](https://github.com/edfiisher/Games-to-Make/actions/runs/39059371537). The public import worked from this workspace. Do not treat the schedule as operational or bypass the source's access restriction.
+The daily workflow is enabled at **06:17 UTC** (07:17 during British Summer Time; 06:17 in winter). It imports from the public [Krillion Game](https://krillion-game.com/) companion, validates the records, runs tests and commits real changes. A [successful hosted run](https://github.com/edfiisher/Games-to-Make/actions/runs/39061519874) verified the complete fetch/build/test/push sequence. It processes duplicate prompts once and retains older questions. Source failure or unresolved score contradictions leave the saved bank untouched.
 
-A permitted feed or automated access from the source is needed before re-enabling the commented 06:17 UTC schedule (07:17 during British Summer Time). After access is resolved, use **GitHub → Games-to-Make → Actions → Public question bank update → Run workflow** for an initial check, then enable the schedule. The workflow needs Actions enabled and permission to push repository contents. Repository protection rules may prevent direct commits. A successful run with no new public records makes no commit.
+The previous provider, krillionanswers.com, returned HTTP 403 to GitHub; it is no longer required for scheduled imports. Public data from it is retained. See [source research](docs/DAILY-SOURCES.md) and [current import status](docs/IMPORT-ACCESS.md).
 
-A successful import changes the files in GitHub; Render must then deploy that commit. For the existing `flat-dive` service, enable automatic deploys from `main` in Render, or use **Manual Deploy → Deploy latest commit**. Do not create another service. Confirm `/api/info` reports the expected version and bank size after deployment.
+## Automatic Render deployment
 
-No scheduler or scraper runs inside the game server, and no private Krillion answer endpoint is accessed. Newly advertised questions wait until the companion publishes answers. If source coverage, counts or tiers fail validation, the job fails and the existing deployed bank remains usable. Check failed Actions runs for source changes. GitHub scheduling is best effort and may stop after 60 days of inactivity in a public repository.
+One-time dashboard setup for the existing service:
 
-The current bank needs only a few megabytes of disk. Free hosting still has resource and availability limits, including idle sleep; adding more questions does not remove those limits. Keep the compiled bank in version control rather than depending on writes to Render's ephemeral filesystem.
+1. Open Render → **flat-dive → Settings**.
+2. Under **Build & Deploy**, confirm the connected GitHub repository is `edfiisher/Games-to-Make`, branch **main**.
+3. Set **Auto-Deploy → On Commit** and save.
+4. For the current release, use **Manual Deploy → Deploy latest commit** once, then check `/api/info` for Counterline, version 5 and at least 200 questions.
 
-For the source owner’s contact details and a permission-request draft, see [Import access](docs/IMPORT-ACCESS.md). There is no GitHub or Render switch that grants access to another site.
+After that, the flow is: scheduled GitHub import → validate data and run tests → commit changed bank → Render deploys that commit. No daily manual deploy is needed. The game loads its bank at startup, so merely writing a file to GitHub does not change an already running server.
+
+Choose **On Commit** for this setup. GitHub's built-in workflow token does not trigger another push workflow, so a bot's new data commit can have no CI checks attached; **After CI Checks Pass** would then prevent Render deploying it. The importer tests the new bank before committing, and Render's build runs `npm test` again.
+
+A checkpoint-only commit includes `[skip render]`; no change to playable content means no unnecessary deployment. Real bank changes use a normal commit. Active rooms reset on deployment because they are in memory; browser question history survives. The import is scheduled in the morning to reduce disruption.
+
+Automatic deployment requires Render's GitHub connection. A service configured only with a public repository URL must first be linked through the Git provider connection; see [Render's deployment documentation](https://render.com/docs/deploys). `render.yaml` explicitly sets `autoDeployTrigger: commit`, but an existing service that is not managed by that Blueprint still needs its dashboard setting changed.

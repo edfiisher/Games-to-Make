@@ -4,7 +4,7 @@ Snapshot prepared 17 October 2026. This independent game is not affiliated with 
 
 ## Recorded questions
 
-`recorded.json` retains 82 unique prompt variants from the public [Krillion Answers companion](https://krillionanswers.com/answer-finder/). The compiler merges three near-identical legacy prompt pairs into 79 distinct recorded questions and maps retired IDs for device history. It preserves source URLs, dates, answer text and published tiers. These are publicly recorded lists, not a live official validator or a claim of complete original answer keys. The original game may keep unrevealed answer sheets private.
+`recorded.json` was seeded with 82 unique prompt variants from the public [Krillion Answers companion](https://krillionanswers.com/answer-finder/). Daily updates now use [Krillion Game](https://krillion-game.com/), with the exact provider and dated answer link retained on each changed question. Existing lists remain when their answers are unchanged. The compiler merges three near-identical legacy prompt pairs into 79 distinct recorded questions and maps retired IDs for device history. It preserves source URLs, dates, answer text and published tiers. These are publicly recorded lists, not a live official validator or a claim of complete original answer keys. The original game may keep unrevealed answer sheets private.
 
 ## Original questions and factual snapshots
 
@@ -24,3 +24,5 @@ License texts and wordfreq's underlying data acknowledgments are in `licenses/`.
 English word frequency estimates familiarity, not actual answer popularity. The compiler ranks each answer set, assigns house tiers and selects one gem around the less familiar fifth. These are editorial ratings, not official Krillion scores or measured player statistics. Recorded tiers are never replaced by these ratings. Unknown answers are not invented by an AI at runtime.
 
 Regenerate the compiled bank with `npm run build:bank`. To regenerate offline frequency values, install `wordfreq==3.1.1` in a separate authoring environment and run `scripts/rate-house.py`; Python is unnecessary for hosting, imports or gameplay.
+
+The scheduled alternative-source import was verified in [run 39061519874](https://github.com/edfiisher/Games-to-Make/actions/runs/39061519874). It reads public pages/JSON, checks sizes, all published preview scores, and full dated question pages when homepage previews are stale. It does not execute third-party scripts. See [source research](../docs/DAILY-SOURCES.md).

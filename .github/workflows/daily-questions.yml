@@ -1,8 +1,7 @@
 name: Public question bank update
 on:
-  # Schedule remains paused until the new public source passes a hosted run.
-  # schedule:
-  #   - cron: "17 6 * * *"
+  schedule:
+    - cron: "17 6 * * *"
   workflow_dispatch:
 permissions:
   contents: write

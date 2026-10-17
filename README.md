@@ -24,7 +24,7 @@ The Counterline rename retains question history and names saved under the previo
 
 Krillion’s [FAQ](https://krillion.io/faq) describes merging dictionaries, wiki pages and other reference datasets into answer sets. Its rarity ratings use measurable frequency where practical, and otherwise combine LLM assistance with a manual pass. Our original sets use the offline reference-and-frequency approach below, with explicit house scoring.
 
-The included bank has **200 distinct questions and 62,171 answer entries**: 79 recorded questions from [Krillion Answers](https://krillionanswers.com/answer-finder/) and 121 original questions built from bounded reference sets. Three repeated legacy prompts are merged, with old history IDs remapped. Topics include geography, science, language, music, literature, sport, space, animals and food. Selection prefers unseen questions and a mixture of topics. Repeated historical records and random combinations do not count as new questions.
+The included bank has **200 distinct questions and 62,195 answer entries**: 79 recorded questions from [Krillion Answers](https://krillionanswers.com/answer-finder/) and [Krillion Game](https://krillion-game.com/) and 121 original questions built from bounded reference sets. Three repeated legacy prompts are merged, with old history IDs remapped. Topics include geography, science, language, music, literature, sport, space, animals and food. Selection prefers unseen questions and a mixture of topics. Repeated historical records and random combinations do not count as new questions.
 
 Recorded questions preserve their published tiers: 10, 15, 30, 60, 85 or 100 points; a miss earns zero. Each point means ten metres skied, up to 7,000 metres. The score guide explains all six tiers; results and the shared scoreboard show points, while the mountain shows distance. Correctly recorded answers end the turn; unlisted answers can be retried until the timer expires. Answer sheets with search are available after all seven turns.
 
@@ -51,7 +51,8 @@ The server listens on all interfaces on port 3000 (`PORT` overrides this). For a
 - `data/house-frequency.json`: precomputed familiarity ratings; no AI or frequency service is called during play.
 - `data/questions.json`: compact, compiled bank used by the server.
 - `scripts/build-bank.js`: validates and reproducibly compiles both kinds of question.
-- `scripts/sync-recorded.js`: merges validated public records without deleting older questions.
+- `scripts/sync-daily.js`: imports dated public lists from Krillion Game, with safe merging and checkpoints.
+- `scripts/sync-recorded.js`: optional legacy index importer; its former source blocks GitHub runners.
 - `test/`: game, correction, finite-set integrity and safe-import tests.
 
 ```sh
@@ -61,11 +62,13 @@ npm run profile
 npm run sync:questions
 ```
 
-Only the final command requires network access. When a workspace needs its environment proxy, use `node --use-env-proxy scripts/sync-recorded.js`. The old `scripts/import-questions.js` entry point delegates to the same safe importer.
+Only the final command requires network access. When this workspace needs its environment proxy, use `node --use-env-proxy scripts/sync-daily.js`. `node scripts/sync-daily.js --check` validates without saving. The old `scripts/import-questions.js` entry point delegates to the new daily importer; `npm run sync:legacy` retains the former provider importer for optional use.
 
-The importer checks coverage against the companion site's reported index size, validates answer counts and tiers, and writes only after validation succeeds. Incomplete coverage or changed source formats fail without overwriting the retained records. A question is added only when recorded answers are public; checking the original public daily prompts does not provide access to private answer sheets. Existing records are retained and unchanged imports create no timestamp-only updates.
+The daily importer reads [Krillion Game](https://krillion-game.com/), its dated archive and its public answer API. It validates seven distinct dated prompts, list sizes, answer records and tier/score pairs. Every visible answer preview must agree. If a homepage preview is stale, a changed list must be corroborated by the full dated question page. Unresolved contradictions fail without writing the saved bank; an API list identical to existing data may simply retain that data. No account or original-site private endpoint is used. Older questions and stable IDs are retained. Requests are spaced by at least one second; missed days catch up chronologically in batches of up to seven.
 
-`.github/workflows/daily-questions.yml` contains a manual import workflow and a prepared **06:17 UTC daily** schedule. **The schedule is paused:** a real GitHub Actions run on 17 October 2026 received HTTP 403 from the companion site, although the same public import succeeded from this workspace. No access restriction is bypassed. Enable the commented schedule only after a permitted feed or source access is available; the existing bank remains usable meanwhile. The workflow tests and commits actual bank changes. See [hosting](HOSTING.md) for details. GitHub schedules are best effort and can stop after 60 days without public-repository activity.
+`.github/workflows/daily-questions.yml` is **enabled at 06:17 UTC daily** (07:17 during British Summer Time, 06:17 in winter). Its [first successful hosted run](https://github.com/edfiisher/Games-to-Make/actions/runs/39061519874) fetched and validated 4,108 answer entries, passed all 30 tests, and pushed the updated bank. It refreshes changed lists and adds distinct new prompts; repeated questions are not counted as new. A saved checkpoint avoids rescanning the entire archive. An identical same-day import makes no commit. Checkpoint-only commits carry `[skip render]`, avoiding needless deployment; changed playable banks use a normal commit.
+
+Enable **Render → flat-dive → Settings → Auto-Deploy → On Commit** once to deploy future bank commits automatically. See [hosting](HOSTING.md). The workflow is operational on GitHub; the actual Render dashboard setting still needs checking by the account owner. Schedules are best effort, source formats can change, and GitHub can disable public-repository schedules after 60 days without activity.
 
 To grow toward 1,000, add clearly scoped sets with authoritative sources and alternate names to the definitions, regenerate familiarity values offline with `scripts/rate-house.py` (authoring-only dependency: `wordfreq==3.1.1`), rebuild, review the answer sets and run tests. Avoid counting paraphrases as new questions. Runtime requires neither Python nor wordfreq. New recorded questions can grow the bank automatically; original questions still need factual review.
 

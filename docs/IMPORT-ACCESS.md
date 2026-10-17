@@ -1,17 +1,9 @@
-# Restoring daily question imports
+# Daily import status
 
-The block is at **krillionanswers.com**, the independent answers companion. It is not a missing GitHub permission, Render setting or Krillion account login. The first GitHub-hosted run received HTTP 403 Forbidden while fetching the public answer-finder page. The same importer succeeded from this workspace. This establishes a difference in permitted access, not its exact cause; the source owner must advise whether it is a security rule or an intentional automated-access restriction.
+**Daily imports now use [Krillion Game](https://krillion-game.com/), an independent public answer site.** Its pages, dated answer links and public answer API work from GitHub Actions. Its robots file permits crawling; the importer spaces requests at least a second apart. No login or access to private original-game answer sheets is required.
 
-The owner's [contact page](https://krillionanswers.com/contact/) lists **hello@krillionanswers.com**. Ask for permission to reuse the recorded lists and an approved API/feed or access method for one daily automated batch. Do not send GitHub credentials or account passwords. Hosted GitHub runners do not have a single stable outbound address, so asking to allow one observed IP is not a reliable setup.
+The [successful hosted run](https://github.com/edfiisher/Games-to-Make/actions/runs/39061519874) verified retrieval, validation, building, 30 tests and the push to GitHub. The workflow runs daily at 06:17 UTC and can also be started through Actions → Public question bank update → Run workflow. It adds genuinely different prompts, updates changed lists and preserves older questions. It does not imply that seven prompts are always new.
 
-Suggested message, ready to send yourself:
+The previous source, krillionanswers.com, still blocks hosted requests with HTTP 403. That is a separate site-side restriction; the scheduled importer no longer depends on it. You do not need to contact that site's owner to use the current setup. Restoring that specific legacy integration would still need a permitted feed/access arrangement.
 
-> Subject: Permission for a daily question-data import into Counterline
->
-> Hi, I run Counterline, a small independent quiz for friends at https://flat-dive.onrender.com. Would you permit us to reuse your publicly recorded question/answer lists and tiers, with attribution and links to your site?
->
-> We would like one automated import batch per day from GitHub Actions. Our initial runner received HTTP 403 from the answer-finder page. The current importer makes roughly 90 sequential requests per daily batch; we are happy to follow your limits or use a supported feed instead. Is there an approved API, downloadable dataset, or access arrangement you would recommend? Please also let us know your reuse and attribution conditions.
->
-> Thanks.
-
-No message has been sent by Codex. A reply with approved reuse/access instructions is needed; then the importer can be adapted, the manual workflow verified and the commented daily schedule enabled. Any key belongs in GitHub Actions secrets, not committed code. A successful import must also deploy to Render before the live bank changes. Meanwhile the existing 200-question bank works independently and original sourced questions can still be added without this integration.
+To publish future bank changes automatically, open Render → flat-dive → Settings → Build & Deploy → Auto-Deploy → **On Commit**, and confirm the linked GitHub branch is main. `render.yaml` also declares that setting for Blueprint-managed deployments. See [hosting](../HOSTING.md) for the full one-time setup and limitations, and [source research](DAILY-SOURCES.md) for the validation details.
