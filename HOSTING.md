@@ -21,6 +21,8 @@ The previous provider, krillionanswers.com, returned HTTP 403 to GitHub; it is n
 
 ## Automatic Render deployment
 
+Verified on 17 October 2026: pushing the vector-skier update (`138dbbc`) automatically published the new homepage and animation module at https://counterline.onrender.com. No manual deployment was needed. The public module matched the pushed file exactly.
+
 Dashboard settings for the Counterline service:
 
 1. Open Render → **counterline → Settings**.
