@@ -1,8 +1,8 @@
 :root {
   color-scheme: light;
   --ink: #173c42;
-  --muted: #647c7c;
-  --orange: #d85d39;
+  --muted: #536b6b;
+  --orange: #b84929;
   --paper: #f6f8f3;
   --line: #ccd9d4;
   --green: #356754;
@@ -20,6 +20,36 @@
 body {
   margin: 0;
 }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  z-index: 10;
+  padding: 12px 18px;
+  background: var(--paper);
+}
+.skip-link:focus {
+  top: 12px;
+}
+.connection {
+  margin: 0 auto 12px;
+  max-width: 1300px;
+  padding: 12px 20px;
+  background: #fff0cf;
+  color: #65460b;
+  font-size: 14px;
+}
 button,
 input {
   font: inherit;
@@ -32,6 +62,7 @@ summary {
 }
 button {
   cursor: pointer;
+  min-height: 44px;
 }
 button:disabled {
   opacity: 0.55;
@@ -82,7 +113,7 @@ a:focus-visible {
   background: transparent;
   color: var(--ink);
   font:
-    10px ui-monospace,
+    12px ui-monospace,
     monospace;
   letter-spacing: 1px;
   padding: 10px;
@@ -173,7 +204,7 @@ main {
   border-left: 0;
   border-radius: 0 3px 3px 0;
   min-width: 0;
-  min-height: 620px;
+  min-height: 520px;
 }
 .eyebrow {
   font:
@@ -186,7 +217,7 @@ h1 {
   font-size: clamp(40px, 4vw, 64px);
   line-height: 1.03;
   letter-spacing: -3px;
-  margin: 22px 0 24px;
+  margin: 0 0 20px;
   font-weight: 800;
 }
 h1 em {
@@ -196,10 +227,16 @@ h1 em {
   color: var(--green);
 }
 .lede {
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.8;
   color: var(--muted);
-  margin-bottom: 30px;
+  margin: 0 0 24px;
+}
+.bank-note {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0 0 18px;
 }
 .run-card {
   display: flex;
@@ -232,7 +269,7 @@ h1 em {
   justify-content: center;
   gap: 12px;
   font:
-    11px/1.4 ui-monospace,
+    12px/1.4 ui-monospace,
     monospace;
   letter-spacing: 1px;
   font-weight: 700;
@@ -274,12 +311,13 @@ h1 em {
   border-bottom: 1px solid var(--line);
   padding: 16px 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .friends summary {
   color: var(--ink);
   cursor: pointer;
   list-style: none;
+  padding: 12px 0;
 }
 .friends summary::-webkit-details-marker {
   display: none;
@@ -288,8 +326,44 @@ h1 em {
   float: right;
 }
 .friends > p {
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.6;
+}
+#group-start {
+  width: 100%;
+  margin-top: 12px;
+}
+.scoring-help {
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.scoring-help summary,
+.name-editor summary {
+  min-height: 44px;
+  padding: 14px 0;
+  cursor: pointer;
+}
+.score-guide {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 18px;
+}
+.score-guide > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 6px;
+}
+.score-guide dd {
+  margin: 0;
+  font-weight: 700;
+}
+.name-editor {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--muted);
 }
 .friends label,
 label {
@@ -308,7 +382,7 @@ input {
   min-width: 0;
   display: block;
   width: 100%;
-  font-size: 14px;
+  font-size: 16px;
   color: var(--ink);
   background: #fff;
   border: 1px solid var(--line);
@@ -365,7 +439,7 @@ footer {
   gap: 20px;
   color: var(--muted);
   font:
-    8px/1.6 ui-monospace,
+    11px/1.6 ui-monospace,
     monospace;
   letter-spacing: 1px;
 }
@@ -378,7 +452,7 @@ footer {
 .hud > div > span {
   display: block;
   font:
-    9px ui-monospace,
+    11px ui-monospace,
     monospace;
   letter-spacing: 1px;
   color: var(--muted);
@@ -404,12 +478,12 @@ footer {
   gap: 8px;
   padding: 16px 0;
   font:
-    9px ui-monospace,
+    11px ui-monospace,
     monospace;
 }
 .runline button {
-  font-size: 8px;
-  padding: 6px 0;
+  font-size: 11px;
+  padding: 8px 0;
 }
 .runline > span {
   white-space: nowrap;
@@ -485,7 +559,7 @@ h2 {
   flex: 1;
 }
 #answerform button {
-  font-size: 10px;
+  font-size: 12px;
   padding: 12px;
 }
 #rejected {
@@ -496,7 +570,7 @@ h2 {
   margin: 10px 0;
 }
 .text-button {
-  font-size: 10px;
+  font-size: 13px;
   color: var(--muted);
   padding: 12px 0;
   background: transparent;
@@ -505,7 +579,7 @@ h2 {
   text-underline-offset: 4px;
 }
 .hint {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   line-height: 1.7;
 }
@@ -531,7 +605,7 @@ h2 {
   margin: 15px 0 4px;
 }
 .points small {
-  font-size: 26px;
+  font-size: 18px;
   letter-spacing: 0;
 }
 .answerlabel {
@@ -575,7 +649,7 @@ h2 {
 }
 .board li small {
   display: block;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 4px;
 }
@@ -587,7 +661,7 @@ h2 {
 }
 #new-run {
   margin-top: 20px;
-  font-size: 9px;
+  font-size: 12px;
 }
 #error {
   color: #a33d29;
@@ -616,7 +690,7 @@ h2 {
 }
 .resultrow small {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.5;
   margin-bottom: 6px;
@@ -633,23 +707,24 @@ h2 {
 .answer-sheet {
   border-bottom: 1px solid var(--line);
   padding: 12px 0;
-  font-size: 12px;
+  font-size: 14px;
 }
 .answer-sheet summary {
   cursor: pointer;
   line-height: 1.7;
   color: var(--muted);
+  padding: 8px 0;
 }
 .answer-list {
   max-height: 240px;
   overflow: auto;
   line-height: 2;
-  font-size: 11px;
+  font-size: 14px;
   color: var(--muted);
   margin: 10px 0;
 }
 .answer-sheet input {
-  font-size: 12px;
+  font-size: 16px;
 }
 .finish-actions {
   margin-top: 24px;
@@ -806,11 +881,12 @@ dialog > p {
     letter-spacing: 1.2px;
   }
   h1 {
-    font-size: 48px;
-    margin-top: 18px;
+    font-size: 42px;
+    letter-spacing: -2px;
+    margin-top: 0;
   }
   .lede {
-    font-size: 13px;
+    font-size: 16px;
   }
   .how {
     margin-top: 24px;
@@ -819,7 +895,7 @@ dialog > p {
     margin-top: 25px;
   }
   footer {
-    font-size: 7px;
+    font-size: 11px;
     padding: 0 5% 20px;
     gap: 10px;
   }
@@ -827,7 +903,16 @@ dialog > p {
     display: none;
   }
   body.playing .mountain-panel {
-    height: 240px;
+    height: 180px;
+  }
+  body:not(.playing) .play-panel {
+    order: -1;
+    border: 1px solid var(--line);
+    border-bottom: 0;
+    border-radius: 3px 3px 0 0;
+  }
+  body:not(.playing) .mountain-panel {
+    border-radius: 0 0 3px 3px;
   }
   body.playing .play-panel {
     padding-top: 24px;
@@ -839,10 +924,10 @@ dialog > p {
     font-size: 26px;
   }
   .runline {
-    font-size: 8px;
+    font-size: 10px;
   }
   .runline button {
-    font-size: 7px;
+    font-size: 10px;
   }
   .runline #dots {
     gap: 3px;
@@ -866,13 +951,13 @@ dialog > p {
     padding: 26px 19px;
   }
   .runline button {
-    font-size: 6px;
+    font-size: 10px;
   }
   h1 {
-    font-size: 43px;
+    font-size: 38px;
   }
   #answerform button {
-    font-size: 8px;
+    font-size: 12px;
     padding: 10px;
   }
   .how {
@@ -951,16 +1036,16 @@ dialog > p {
   box-shadow: 0 0 35px #f8db8c66;
 }
 .feedback[data-tier="rare"] .points {
-  color: #29897d;
+  color: #1c766a;
 }
 .feedback[data-tier="deepcut"] .points {
-  color: #8862ad;
+  color: #76519b;
 }
 .feedback[data-tier="krillion"] {
   background: radial-gradient(ellipse at 50% 35%, #f5d77a3b, transparent 65%);
 }
 .feedback[data-tier="krillion"] .points {
-  color: #ad7b16;
+  color: #8a600a;
 }
 .feedback[data-tier="krillion"] .tier {
   border-color: #d2b65f;
@@ -1037,7 +1122,7 @@ dialog > p {
   gap: 8px;
 }
 .correction-actions button {
-  font-size: 9px;
+  font-size: 12px;
   padding: 11px 12px;
 }
 .correction-actions .primary {
@@ -1046,13 +1131,12 @@ dialog > p {
 .correction small {
   display: block;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   margin-top: 10px;
 }
 @keyframes reward-pop {
   from {
     transform: translateY(12px) scale(0.88);
-    opacity: 0.3;
   }
   to {
     transform: translateY(0) scale(1);
@@ -1062,7 +1146,6 @@ dialog > p {
 @keyframes rare-pop {
   0% {
     transform: translateY(20px) scale(0.7);
-    opacity: 0.2;
   }
   55% {
     transform: translateY(-5px) scale(1.12);
@@ -1108,18 +1191,19 @@ dialog > p {
   }
 }
 .question-note {
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.6;
   color: var(--muted);
   margin: -14px 0 20px;
 }
 .sheet-status,
 .sheet-credit {
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.6;
   color: var(--muted);
 }
 .sources-page {
+  display: block;
   max-width: 800px;
   margin: 30px auto 70px;
   padding: 0 24px;

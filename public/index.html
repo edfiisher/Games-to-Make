@@ -6,28 +6,31 @@
     <meta name="theme-color" content="#edf3f3" />
     <meta
       name="description"
-      content="Seven questions. One mountain. Find the rarest answers and ski further. Play solo or invite a friend."
+      content="Counterline is a skiing quiz with seven questions per run. Less common answers score more. Play solo or invite friends."
     />
-    <title>Fresh Tracks · think off-piste</title>
+    <title>Counterline</title>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to game</a>
     <header class="site-header">
-      <a class="brand" href="/" aria-label="Fresh Tracks home"
+      <a class="brand" href="/" aria-label="Counterline home"
         ><svg viewBox="0 0 44 36" aria-hidden="true">
           <path d="M2 32 20 3l9 15 5-7 9 21Z" fill="currentColor" />
           <path d="m15 12 5-9 6 10-7-3Z" fill="#edf3f3" /></svg
-        ><span>FRESH TRACKS<small>THINK OFF-PISTE.</small></span></a
+        ><span>COUNTERLINE</span></a
       ><button id="sound" class="quiet" aria-pressed="false">SOUND OFF</button>
     </header>
-    <main>
+    <p id="connection" class="connection" role="status" hidden></p>
+    <main id="main" tabindex="-1">
       <section
         class="mountain-panel"
         aria-label="Your journey down the mountain"
       >
         <div class="mountain-label">
-          <span class="status-dot"></span> THE MOUNTAIN IS OPEN
-          <span id="run-number">YOUR NEXT RUN AWAITS</span>
+          <span class="status-dot"></span> COUNTERLINE
+          <span id="run-number">SOLO OR WITH FRIENDS</span>
         </div>
         <svg
           id="mountain"
@@ -110,13 +113,13 @@
           <g transform="translate(320 115)">
             <path d="M0 0v38" stroke="#173c42" stroke-width="3" />
             <path d="M0 0h31l-8 9 8 9H0Z" fill="#df643f" />
-            <text x="43" y="18" class="map-label">THE SUMMIT</text>
+            <text x="43" y="18" class="map-label">SUMMIT</text>
           </g>
           <g transform="translate(572 610)">
             <path d="M-5 0v34M35 0v34" stroke="#173c42" stroke-width="3" />
             <path d="M-5 0h40v13H-5Z" fill="#173c42" />
             <text x="16" y="52" text-anchor="middle" class="map-label">
-              THE VALLEY
+              FINISH
             </text>
           </g>
           <g transform="translate(520 592)">
@@ -152,69 +155,95 @@
           ><strong id="descent-distance"></strong>
         </div>
         <div class="mountain-bottom">
-          <span>7 TURNS / 7,000 METRES</span
-          ><span>RARE ANSWERS. LONGER LINES. ↘</span>
+          <span>7 QUESTIONS · 25 SECONDS EACH</span>
         </div>
       </section>
       <section class="play-panel">
         <section id="home">
-          <div class="eyebrow">A LITTLE KNOWLEDGE. A LOT OF MOUNTAIN.</div>
-          <h1>Fresh snow.<br />Fresh <em>questions.</em></h1>
+          <h1>Counterline</h1>
           <p class="lede">
-            Seven questions. Twenty-five seconds each.<br />Find a rarer answer.
-            Ski a little further.
+            Seven questions, 25 seconds each. Less common answers score more.
           </p>
-          <div class="run-card">
-            <svg class="run-card-icon" viewBox="0 0 28 28" aria-hidden="true">
-              <path
-                d="m5 5 18 18M8 23h15V8"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              />
-            </svg>
-            <div>
-              <strong>Your next run is ready.</strong>
-              <p id="bank-note">New turns, every time you play.</p>
-            </div>
-          </div>
-          <button id="start" class="primary">
-            START A NEW RUN <span>↘</span>
-          </button>
-          <p class="solo-note">Just you and the mountain. No sign-up needed.</p>
+          <p id="bank-note" class="bank-note">Loading question count…</p>
+          <button id="start" class="primary">PLAY SOLO</button>
           <details class="friends">
-            <summary>Taking a friend along? <span>＋</span></summary>
+            <summary>
+              Play with friends <span aria-hidden="true">＋</span>
+            </summary>
             <p>
-              Prepare a run, share an invite, then start your timer. Or join a
-              friend here.
+              Create a run and share its link, or enter a friend's code.
+              Everyone gets the same questions and their own timer.
             </p>
-            <label for="name">Your name <span>optional</span></label
-            ><input
+            <label for="name">Your name <span>optional</span></label>
+            <input
               id="name"
               maxlength="24"
               autocomplete="nickname"
-              placeholder="A name for the leaderboard"
+              placeholder="Name for the scoreboard"
             />
+            <button id="group-start" class="secondary">
+              CREATE A GROUP RUN
+            </button>
             <form id="joinform">
-              <label for="code">Have an invite code?</label>
+              <label for="code">Invite code</label>
               <div class="input-row">
                 <input
                   id="code"
                   maxlength="6"
+                  minlength="6"
+                  required
+                  pattern="[A-Fa-f0-9]{6}"
+                  title="Six letters A–F or numbers, for example ABC123"
                   placeholder="ABC123"
                   autocomplete="off"
-                  aria-label="Invite code"
-                /><button type="submit" class="secondary">JOIN RUN →</button>
+                  autocapitalize="characters"
+                  spellcheck="false"
+                />
+                <button type="submit" class="secondary">JOIN</button>
               </div>
             </form>
           </details>
-          <div class="how">
-            <span>01 <b>Read the question.</b></span
-            ><span>02 <b>Think off-piste.</b></span
-            ><span>03 <b>Let it run.</b></span>
-          </div>
+          <details class="scoring-help">
+            <summary>How scoring works</summary>
+            <p>
+              Give one answer per question. Correct answers end the turn; you
+              can retry a miss while the timer runs. Each point moves your skier
+              10 metres.
+            </p>
+            <dl class="score-guide">
+              <div>
+                <dt>Common</dt>
+                <dd>10</dd>
+              </div>
+              <div>
+                <dt>Popular alternative</dt>
+                <dd>15</dd>
+              </div>
+              <div>
+                <dt>Uncommon</dt>
+                <dd>30</dd>
+              </div>
+              <div>
+                <dt>Rare</dt>
+                <dd>60</dd>
+              </div>
+              <div>
+                <dt>Very rare</dt>
+                <dd>85</dd>
+              </div>
+              <div>
+                <dt>Standout</dt>
+                <dd>100</dd>
+              </div>
+            </dl>
+            <p>
+              A standout is a selected answer, so it may not be the rarest.
+              <a href="/sources">About the ratings and sources</a>.
+            </p>
+          </details>
         </section>
         <section id="game" hidden>
+          <h1 class="sr-only">Counterline game</h1>
           <div class="hud">
             <div>
               <span>METRES SKIED</span
@@ -226,51 +255,43 @@
           </div>
           <div class="runline">
             <span id="roundlabel">TURN 1 / 7</span>
-            <div id="dots" aria-label="Run progress"></div>
-            <button id="invite" class="quiet">INVITE A FRIEND ↗</button>
+            <div
+              id="dots"
+              role="img"
+              aria-label="0 of 7 questions complete"
+            ></div>
+            <button id="invite" class="quiet">INVITE FRIENDS</button>
           </div>
           <div id="stage" aria-live="polite"></div>
           <section id="leaderboard" class="board" hidden>
-            <div class="sectiontitle">
-              ON THE MOUNTAIN <span>YOUR SHARED RUN</span>
-            </div>
+            <div class="sectiontitle">SCOREBOARD <span>SHARED RUN</span></div>
             <ol id="board"></ol>
           </section>
-          <button id="new-run" class="text-button">
-            Leave this run · start fresh →
-          </button>
+          <button id="new-run" class="text-button">START ANOTHER RUN</button>
         </section>
         <p id="error" role="alert"></p>
-        <p id="notice" class="notice">
-          Rarity scoring inspired by Krillion. Recorded answers from
-          <a
-            href="https://krillionanswers.com/answer-finder/"
-            target="_blank"
-            rel="noreferrer"
-            >Krillion Answers</a
-          >. <a href="/sources">Sources & scoring</a>. Independent game.
-        </p>
       </section>
     </main>
     <footer>
-      <span>FRESH TRACKS © 2026</span><span>GOOD COMPANY. BETTER LINES.</span
-      ><span>SEE YOU AT THE BOTTOM. ↘</span>
+      <span>COUNTERLINE</span><a href="/sources">Sources & scoring</a>
     </footer>
-    <dialog id="invite-dialog">
+    <dialog
+      id="invite-dialog"
+      aria-labelledby="invite-title"
+      aria-describedby="invite-description"
+    >
       <button id="close-invite" class="dialog-close" aria-label="Close invite">
         ×
       </button>
-      <div class="eyebrow">BETTER WITH COMPANY</div>
-      <h2>Meet you on the mountain.</h2>
-      <p>
-        Send this link to a friend. They’ll join your run with the same seven
-        questions. You can invite before starting or between turns. Each skier
-        gets their own timer.
+      <h2 id="invite-title">Invite friends</h2>
+      <p id="invite-description">
+        Share this link or code. Friends join the same seven-question run and
+        start their own timer when ready.
       </p>
       <label for="invite-link">Your invite link</label
       ><input id="invite-link" readonly />
       <div class="share-actions">
-        <button id="share" class="primary">SHARE INVITE ↗</button
+        <button id="share" class="primary">SHARE INVITE</button
         ><button id="copy" class="secondary">COPY LINK</button>
       </div>
       <p class="invite-code">

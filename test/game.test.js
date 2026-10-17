@@ -185,7 +185,8 @@ test("the API respects saved device history and has no archive picker endpoint",
   assert.equal(new Set(ids).size, 7);
   const info = await (await fetch(base + "/api/info")).json();
   assert.equal(info.questionCount, questions.length);
-  assert.equal(info.version, 4);
+  assert.equal(info.name, "Counterline");
+  assert.equal(info.version, 5);
   assert.equal(info.answers, undefined);
   assert.equal((await fetch(base + "/api/dives")).status, 405);
 });
@@ -491,4 +492,96 @@ test("completed-run payloads stay small and answer sheets are paged, authenticat
       .status,
     404,
   );
+});
+
+test("renaming the game keeps old device history and writes progress under Counterline", () => {
+  const data = new Map([
+    ["fresh-tracks-seen-v1", JSON.stringify(["old-a", "old-b"])],
+  ]);
+  const storage = {
+    getItem: (key) => data.get(key),
+    setItem: (key, value) => data.set(key, value),
+  };
+  assert.deepEqual(readHistory(storage), ["old-a", "old-b"]);
+  remember(storage, ["new-c", "old-a"]);
+  assert.deepEqual(JSON.parse(data.get("counterline-seen-v1")), [
+    "old-b",
+    "new-c",
+    "old-a",
+  ]);
+  data.set("counterline-seen-v1", "[]");
+  assert.deepEqual(readHistory(storage), []);
+});
+
+test("invited players can rename themselves before starting without changing questions or deadlines", async (t) => {
+  const { post, request } = await fixture(t);
+  const host = await post("start", { name: "Host" });
+  let guest = await post("join", { code: host.code });
+  const session = auth(guest);
+  const renamed = await post("name", { ...session, name: " Alex " });
+  assert.equal(renamed.name, "Alex");
+  assert.equal(renamed.phase, "intro");
+  assert.equal(renamed.deadline, null);
+  assert.equal(
+    (await post("state", auth(host))).board.find((p) => !p.isYou).name,
+    "Alex",
+  );
+  assert.equal(
+    (await request("name", { ...session, name: "   " })).status,
+    400,
+  );
+  assert.equal(
+    (await request("name", { ...session, name: "a".repeat(25) })).status,
+    400,
+  );
+  assert.equal(
+    (await request("name", { ...session, playerId: "forged", name: "Other" }))
+      .status,
+    404,
+  );
+  guest = await post("next", session);
+  const deadline = guest.deadline;
+  assert.equal(
+    (await request("name", { ...session, name: "During timer" })).status,
+    409,
+  );
+  assert.equal((await post("state", session)).deadline, deadline);
+  assert.equal((await post("next", auth(host))).question.id, guest.question.id);
+});
+
+test("unchanged static assets revalidate without retransmission and game state never caches", async (t) => {
+  const { base, post } = await fixture(t);
+  for (const path of [
+    "/",
+    "/app.js",
+    "/assets/skier.webp",
+    "/icon.svg",
+    "/sources",
+  ]) {
+    const response = await fetch(base + path);
+    assert.equal(response.status, 200);
+    assert.ok((await response.arrayBuffer()).byteLength > 0);
+    const etag = response.headers.get("etag");
+    assert.match(etag, /^"[a-f0-9]+"$/);
+    const repeat = await fetch(base + path, {
+      headers: { "If-None-Match": etag },
+    });
+    assert.equal(repeat.status, 304);
+    assert.equal((await repeat.arrayBuffer()).byteLength, 0);
+    assert.equal(
+      (
+        await fetch(base + path, {
+          headers: { "If-None-Match": '"old-version"' },
+        })
+      ).status,
+      200,
+    );
+  }
+  const ready = await post("start", {});
+  const stateResponse = await fetch(base + "/api/state", {
+    method: "POST",
+    body: JSON.stringify(auth(ready)),
+  });
+  assert.equal(stateResponse.headers.get("cache-control"), "no-store");
+  assert.equal(stateResponse.headers.get("etag"), null);
 });

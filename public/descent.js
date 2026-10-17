@@ -1,7 +1,7 @@
 const NS = "http://www.w3.org/2000/svg";
 export const effects = {
   plankton: {
-    title: "A CLEAN TURN",
+    title: "COMMON",
     duration: 1050,
     jump: 0,
     spin: 0,
@@ -9,7 +9,7 @@ export const effects = {
     color: "#dff5fa",
   },
   tooclever: {
-    title: "THE POPULAR LINE",
+    title: "POPULAR ALTERNATIVE",
     duration: 1200,
     jump: 0,
     spin: 0,
@@ -17,7 +17,7 @@ export const effects = {
     color: "#c9e8ed",
   },
   schooler: {
-    title: "NICE CARVE",
+    title: "UNCOMMON",
     duration: 1450,
     jump: 8,
     spin: 0,
@@ -25,7 +25,7 @@ export const effects = {
     color: "#d6f1ff",
   },
   rare: {
-    title: "FRESH POWDER",
+    title: "RARE",
     duration: 1750,
     jump: 32,
     spin: 0,
@@ -33,7 +33,7 @@ export const effects = {
     color: "#91e0d5",
   },
   deepcut: {
-    title: "OFF-PISTE!",
+    title: "VERY RARE",
     duration: 2150,
     jump: 62,
     spin: 0,
@@ -41,7 +41,7 @@ export const effects = {
     color: "#c4adf3",
   },
   krillion: {
-    title: "FIRST TRACKS!",
+    title: "STANDOUT",
     duration: 2650,
     jump: 100,
     spin: 360,
@@ -49,7 +49,7 @@ export const effects = {
     color: "#f4c766",
   },
   miss: {
-    title: "NEXT TURN. NEW LINE.",
+    title: "NO SCORE",
     duration: 500,
     jump: 0,
     spin: 0,

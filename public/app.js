@@ -11,13 +11,13 @@ const escape = (s) =>
       ],
   );
 const tiers = {
-  plankton: "● Green run",
-  tooclever: "↺ Crowded line",
-  schooler: "◆ Blue run",
-  rare: "◆ Black run",
-  deepcut: "✳ Off-piste",
-  krillion: "✦ First tracks",
-  miss: "— Caught an edge",
+  plankton: "Common",
+  tooclever: "Popular alternative",
+  schooler: "Uncommon",
+  rare: "Rare",
+  deepcut: "Very rare",
+  krillion: "Standout",
+  miss: "No score",
 };
 const storage = {
   getItem(key) {
@@ -33,13 +33,14 @@ const storage = {
     } catch {}
   },
 };
-const SESSION_KEY = "fresh-tracks-session-v1";
+const SESSION_KEY = "counterline-session-v1";
+const LEGACY_SESSION_KEY = "fresh-tracks-session-v1";
 let session = null,
   state = null,
   view = "",
   busy = false,
   offset = 0,
-  sound = false,
+  sound = storage.getItem("counterline-sound") === "on",
   audio,
   generation = 0,
   polling = false;
@@ -48,15 +49,24 @@ let knownCount = 0,
   knownAliases = {},
   ignoredCorrection = null;
 const descent = createDescent();
-$("name").value = storage.getItem("fresh-tracks-name") ?? "";
+$("name").value =
+  storage.getItem("counterline-name") ??
+  storage.getItem("fresh-tracks-name") ??
+  "";
 $("name").addEventListener("input", () =>
-  storage.setItem("fresh-tracks-name", $("name").value),
+  storage.setItem("counterline-name", $("name").value),
 );
+function soundLabel() {
+  $("sound").textContent = sound ? "SOUND ON" : "SOUND OFF";
+  $("sound").setAttribute("aria-pressed", String(sound));
+}
+soundLabel();
 function saveSession() {
   try {
     session
       ? sessionStorage.setItem(SESSION_KEY, JSON.stringify(session))
       : sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(LEGACY_SESSION_KEY);
   } catch {}
 }
 function newSession(s) {
@@ -77,7 +87,7 @@ function showHome() {
   $("home").hidden = false;
   $("game").hidden = true;
   document.body.classList.remove("playing");
-  $("run-number").textContent = "YOUR NEXT RUN AWAITS";
+  $("run-number").textContent = "SOLO OR WITH FRIENDS";
   descent.reset();
   updateBankNote();
   history.replaceState(null, "", "/");
@@ -90,24 +100,51 @@ function updateBankNote() {
   ).size;
   const left = Math.max(0, knownCount - seen);
   $("bank-note").textContent = knownCount
-    ? `${knownCount} questions on the mountain · ${left ? left + " still unexplored" : "time to revisit some favourite lines"}`
-    : "New turns, every time you play.";
+    ? `${knownCount} questions · ${left ? left + " unseen on this device" : "all played; oldest questions return first"}`
+    : "Questions are selected automatically.";
 }
 function setBusy(value) {
   busy = value;
   for (const el of document.querySelectorAll(
-    "#start, #answerform button, #joinform button, [data-next], #skip, #again, #new-run, #confirm-correction, #dismiss-correction",
+    "#start, #group-start, #answerform button, #joinform button, #nameform button, [data-next], #skip, #again, #new-run, #confirm-correction, #dismiss-correction",
   ))
     el.disabled = value;
+  for (const button of document.querySelectorAll("[data-busy-label]")) {
+    button.textContent = button.dataset.busyLabel;
+    delete button.dataset.busyLabel;
+    button.setAttribute("aria-busy", "false");
+  }
+  if (value) {
+    const focused = document.activeElement;
+    const pending =
+      focused instanceof HTMLButtonElement && focused.getClientRects().length
+        ? focused
+        : (document.querySelector(
+            "#answerform button, .ready-card [data-next], #again",
+          ) ?? $("start"));
+    pending.setAttribute("aria-busy", "true");
+    pending.dataset.busyLabel = pending.textContent;
+    pending.textContent = "PLEASE WAIT…";
+  }
+}
+function connectionFailed() {
+  $("connection").textContent =
+    state?.phase === "answering"
+      ? "Connection lost. Reconnecting… Your timer continues."
+      : "Connection lost. Reconnecting…";
+  $("connection").hidden = false;
 }
 function report(error) {
   if (error.expired) showHome();
   $("error").textContent =
     error.name === "TimeoutError"
-      ? "The mountain is taking a moment. Please try again."
-      : error.message;
+      ? "The server took too long to respond. Please try again."
+      : error instanceof TypeError
+        ? "Could not connect. Please try again."
+        : error.message;
 }
 async function api(action, data = {}) {
+  const sentAt = performance.now();
   const r = await fetch("/api/" + action, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -117,8 +154,11 @@ async function api(action, data = {}) {
   if (!r.headers.get("content-type")?.includes("application/json"))
     throw Error("The server is waking up. Please try again in a moment.");
   const d = await r.json();
+  d.receivedAt = Date.now();
+  d.roundTripMs = performance.now() - sentAt;
+  $("connection").hidden = true;
   if (!r.ok) {
-    const error = Error(d.error ?? "Could not reach the mountain. Try again.");
+    const error = Error(d.error ?? "The request failed. Please try again.");
     error.expired = d.expired;
     error.state = d.state;
     throw error;
@@ -140,9 +180,16 @@ async function act(action, data = {}) {
     }
   } finally {
     setBusy(false);
+    if (
+      started === generation &&
+      action === "answer" &&
+      state?.correction &&
+      state.correction.id !== ignoredCorrection
+    )
+      $("confirm-correction")?.focus({ preventScroll: true });
   }
 }
-async function startRun() {
+async function startRun({ invite = false } = {}) {
   if (busy) return;
   setBusy(true);
   $("error").textContent = "";
@@ -150,6 +197,7 @@ async function startRun() {
     newSession(
       await api("start", { name: $("name").value, seen: readHistory(storage) }),
     );
+    if (invite) $("invite").click();
     if (innerWidth < 761)
       window.scrollTo({
         top: 0,
@@ -183,6 +231,7 @@ async function join(code) {
   }
 }
 $("start").onclick = startRun;
+$("group-start").onclick = () => startRun({ invite: true });
 $("new-run").onclick = startRun;
 $("joinform").onsubmit = (event) => {
   event.preventDefault();
@@ -190,8 +239,8 @@ $("joinform").onsubmit = (event) => {
 };
 $("sound").onclick = () => {
   sound = !sound;
-  $("sound").textContent = sound ? "SOUND ON" : "SOUND OFF";
-  $("sound").setAttribute("aria-pressed", String(sound));
+  storage.setItem("counterline-sound", sound ? "on" : "off");
+  soundLabel();
   if (sound) tone();
 };
 function tone(tier = "schooler") {
@@ -258,8 +307,8 @@ $("copy").onclick = async () => {
 $("share").onclick = async () => {
   try {
     await navigator.share({
-      title: "Join my Fresh Tracks run",
-      text: "Same mountain. Same questions. Race you to the bottom?",
+      title: "Join my Counterline game",
+      text: "Seven questions. Join my game with this link.",
       url: $("invite-link").value,
     });
   } catch (error) {
@@ -287,6 +336,7 @@ function renderCorrection(s) {
     $("answer")?.focus({ preventScroll: true });
   };
   setBusy(busy);
+  if (!busy) $("confirm-correction").focus({ preventScroll: true });
 }
 function resultSheet(q, index) {
   return `<details class="answer-sheet" data-sheet="${index}"><summary>${escape(q.text)}</summary><div class="sheet-content"></div></details>`;
@@ -297,7 +347,13 @@ async function paintAnswers(details, query = "", offset = 0) {
   sheetTickets.set(details, ticket);
   const current = generation,
     status = details.querySelector(".sheet-status");
-  status.textContent = "Loading recorded answers…";
+  const retry = details.querySelector(".sheet-retry"),
+    more = details.querySelector(".sheet-more"),
+    list = details.querySelector(".answer-list");
+  retry.hidden = true;
+  more.disabled = true;
+  list.setAttribute("aria-busy", "true");
+  status.textContent = "Loading answers…";
   try {
     const result = await api("answers", {
       index: Number(details.dataset.sheet),
@@ -310,20 +366,28 @@ async function paintAnswers(details, query = "", offset = 0) {
       sheetTickets.get(details) !== ticket
     )
       return;
-    const list = details.querySelector(".answer-list");
     const html = result.answers
       .map((a) => `<div>${escape(a.answer)} <b>· ${a.score}</b></div>`)
       .join("");
     if (offset) list.insertAdjacentHTML("beforeend", html);
-    else list.innerHTML = html || "No recorded match.";
+    else list.innerHTML = html || "No matching answers.";
     const loaded = offset + result.answers.length;
     status.textContent = `${loaded} of ${result.total} answers`;
-    const more = details.querySelector(".sheet-more");
+    more.disabled = false;
+    list.setAttribute("aria-busy", "false");
     more.hidden = loaded >= result.total;
     more.onclick = () => paintAnswers(details, query, loaded);
   } catch (error) {
-    if (details.isConnected && current === generation)
+    if (
+      details.isConnected &&
+      current === generation &&
+      sheetTickets.get(details) === ticket
+    ) {
       status.textContent = error.message;
+      list.setAttribute("aria-busy", "false");
+      retry.hidden = false;
+      retry.onclick = () => paintAnswers(details, query, offset);
+    }
   }
 }
 function render(s) {
@@ -332,7 +396,8 @@ function render(s) {
     s.answers = state.answers;
   const prior = state;
   state = s;
-  offset = s.serverNow - Date.now();
+  offset =
+    s.serverNow + (s.roundTripMs ?? 0) / 2 - (s.receivedAt ?? Date.now());
   remember(storage, s.playedIds);
   knownCount = s.bankSize;
   $("home").hidden = true;
@@ -352,7 +417,7 @@ function render(s) {
       ? "Invite before the timer starts or between turns"
       : "";
   $("invite").textContent =
-    s.phase === "answering" ? "INVITE BETWEEN TURNS" : "INVITE A FRIEND ↗";
+    s.phase === "answering" ? "INVITE BETWEEN TURNS" : "INVITE FRIENDS";
   $("run-number").textContent =
     s.board.length > 1
       ? "SHARED RUN · " + s.board.length + " SKIERS"
@@ -361,20 +426,26 @@ function render(s) {
     { length: 7 },
     (_, i) => `<i class="${i < s.results.length ? "done" : ""}"></i>`,
   ).join("");
+  $("dots").setAttribute(
+    "aria-label",
+    `${s.results.length} of 7 questions complete`,
+  );
+  if ($("player-label")) $("player-label").textContent = `Name: ${s.name}`;
   $("roundlabel").textContent =
     s.results.length === 7
       ? "RUN COMPLETE"
-      : `TURN ${s.phase === "feedback" ? s.round : s.round + 1} / 7`;
+      : `QUESTION ${s.phase === "feedback" ? s.round : s.round + 1} / 7`;
   $("leaderboard").hidden = s.board.length < 2;
   $("board").innerHTML = s.board
     .map(
       (p, i) =>
-        `<li class="${p.isYou ? "you" : ""}"><div>${i + 1}. ${escape(p.name)}${p.isYou ? " (you)" : ""}<small>${p.done ? "At the valley" : p.rounds + " of 7 turns complete"}</small></div><b>${(p.score * 10).toLocaleString()}m</b></li>`,
+        `<li class="${p.isYou ? "you" : ""}"><div>${i + 1}. ${escape(p.name)}${p.isYou ? " (you)" : ""}<small>${p.done ? "Finished" : p.rounds + " of 7 complete"}</small></div><b>${p.score}<small>points</small></b></li>`,
     )
     .join("");
   const key = s.code + ":" + s.phase + ":" + s.round;
   if (key === view) {
-    if ($("rejected")) $("rejected").textContent = s.rejected ?? "";
+    if ($("rejected") && Object.hasOwn(s, "rejected"))
+      $("rejected").textContent = s.rejected;
     renderCorrection(s);
     return;
   }
@@ -384,12 +455,25 @@ function render(s) {
   const stage = $("stage");
   stage.classList.remove("urgent");
   if (s.phase === "intro") {
-    stage.innerHTML = `<div class="ready-card"><span class="ready-tag">● TIMER NOT STARTED</span><h2>Take your time<br>at the top.</h2><p class="hint">Invite your friends and get comfortable. The question stays hidden and the clock stays stopped until you press Start timer.</p><button data-next class="primary">START TIMER · 25 SECONDS ↘</button><button id="ready-invite" class="secondary ready-invite">INVITE A FRIEND ↗</button></div>`;
+    stage.innerHTML = `<div class="ready-card"><span class="ready-tag">TIMER NOT STARTED</span><h2>Ready to start?</h2><p class="hint">Start the timer to reveal your first question. You can invite friends before starting.</p><button data-next class="primary">START TIMER · 25 SECONDS</button><button id="ready-invite" class="secondary ready-invite">INVITE FRIENDS</button><details class="name-editor"><summary><span id="player-label">Name: ${escape(s.name)}</span> · Change</summary><form id="nameform"><label for="player-name">Your name</label><div class="input-row"><input id="player-name" maxlength="24" required autocomplete="nickname" value="${escape(s.name)}"><button class="secondary" type="submit">SAVE</button></div><p id="name-status" role="status"></p></form></details></div>`;
     $("ready-invite").onclick = () => $("invite").click();
+    $("nameform").onsubmit = async (event) => {
+      event.preventDefault();
+      const name = $("player-name").value.trim();
+      if (!name) return;
+      await act("name", { name });
+      if (state?.name === name) {
+        $("name-status").textContent = "Name saved.";
+        storage.setItem("counterline-name", name);
+        $("name").value = name;
+      }
+    };
   } else if (s.phase === "answering") {
-    stage.innerHTML = `<div class="kicker">TURN ${s.round + 1} OF 7 · THINK OFF-PISTE</div><h2 id="question">${escape(s.question.text)}</h2>${s.question.note ? `<p class="question-note">${escape(s.question.note)}</p>` : ""}<div class="clockline"><span>FIND ONE RARE ANSWER</span><strong id="seconds">${(Math.max(0, s.deadline - s.serverNow) / 1000).toFixed(1)}</strong></div><div class="timer"><i id="bar" style="width:${Math.max(0, s.deadline - s.serverNow) / 250}%"></i></div><form id="answerform"><input id="answer" aria-label="Your answer" placeholder="Take a different line…" maxlength="160" autocomplete="off" required><button type="submit" class="primary">LET IT RUN ↘</button></form><p id="rejected" role="status"></p><section id="correction" class="correction" aria-label="Answer correction" hidden></section><button id="skip" class="text-button">Pass this turn</button>`;
+    const left = Math.max(0, Math.min(25000, s.deadline - Date.now() - offset));
+    stage.innerHTML = `<div class="kicker">QUESTION ${s.round + 1} OF 7</div><h2 id="question" tabindex="-1">${escape(s.question.text)}</h2>${s.question.note ? `<p class="question-note" id="question-note">${escape(s.question.note)}</p>` : ""}<div class="clockline"><span>SECONDS LEFT</span><strong id="seconds" role="timer" aria-live="off">${(left / 1000).toFixed(1)}</strong></div><div class="timer" aria-hidden="true"><i id="bar" style="width:${left / 250}%"></i></div><form id="answerform"><label class="sr-only" for="answer">Your answer</label><input id="answer" aria-describedby="question${s.question.note ? " question-note" : ""}" placeholder="Type your answer" maxlength="160" autocomplete="off" autocapitalize="sentences" spellcheck="false" required><button type="submit" class="primary">SUBMIT</button></form><p id="rejected" role="status"></p><section id="correction" class="correction" aria-label="Answer correction" hidden></section><button id="skip" class="text-button">Pass this turn</button>`;
     if (s.correction) $("answer").value = s.correction.from;
     $("answer").addEventListener("input", () => {
+      $("rejected").textContent = "";
       if (state.correction) {
         ignoredCorrection = state.correction.id;
         $("correction").hidden = true;
@@ -404,10 +488,10 @@ function render(s) {
   } else if (s.phase === "feedback") {
     const r = s.results.at(-1);
     if (previous) tone(s.results.at(-1).tier);
-    stage.innerHTML = `<div class="feedback" data-tier="${r.tier}"><span class="tier">${tiers[r.tier]}</span><div class="points">+${(r.score * 10).toLocaleString()}<small>m</small></div><p class="answerlabel">${escape(r.answer ?? r.raw ?? "No answer this turn")}</p><p class="hint">${r.score ? `+${r.score} points. A little further down the mountain.` : "No distance this time. A new line is coming."}</p><button data-next class="primary">NEXT TURN ↘</button></div>`;
+    stage.innerHTML = `<div class="feedback" data-tier="${r.tier}"><h2 id="feedback-title" class="tier" tabindex="-1">${tiers[r.tier]}</h2><div class="points">+${r.score}<small> points</small></div><p class="answerlabel">${escape(r.answer ?? r.raw ?? "No answer submitted")}</p><p class="hint">${r.score ? `${(r.score * 10).toLocaleString()} metres skied` : "No points this question."}</p><button data-next class="primary">NEXT QUESTION</button></div>`;
   } else {
     if (previous) tone(s.results.at(-1).tier);
-    stage.innerHTML = `<div class="kicker">THAT’S A WRAP. SKIS OFF.</div><div class="result-total">${(score * 10).toLocaleString()}<small> metres skied</small></div><p class="hint">${score} / 700 points · ${s.board.length > 1 ? "See how your friends are getting on below." : "Just you, seven turns, and a very good mountain."}</p><div class="finish-actions"><button id="again" class="primary">FRESH SNOW. ANOTHER RUN? ↘</button></div>${s.freshCount < 7 ? '<p class="recycle-note">You’re exploring familiar terrain. Once you’ve seen every question, the least recently played ones return.</p>' : ""}${s.results.map((r, i) => `<div class="resultrow"><div><small>${i + 1}. ${escape(r.prompt)}</small>${escape(r.answer ?? r.raw ?? "—")}</div><span>${tiers[r.tier]}<br><b>+${r.score * 10}m</b></span></div>`).join("")}<div class="sheets"><div class="kicker">THE LINES YOU COULD HAVE TAKEN</div>${(s.answers ?? []).map(resultSheet).join("")}</div>`;
+    stage.innerHTML = `<h2 id="result-title" tabindex="-1">Run complete</h2><div class="result-total">${score}<small> / 700 points</small></div><p class="hint">${(score * 10).toLocaleString()} metres skied${s.board.length > 1 ? " · Scores update as friends finish." : ""}</p><div class="finish-actions"><button id="again" class="primary">PLAY AGAIN</button></div>${s.freshCount < 7 ? '<p class="recycle-note">Some questions are repeats. Once every question has been seen, the oldest ones return first.</p>' : ""}${s.results.map((r, i) => `<div class="resultrow"><div><small>${i + 1}. ${escape(r.prompt)}</small>${escape(r.answer ?? r.raw ?? "—")}</div><span>${tiers[r.tier]}<br><b>+${r.score} points</b></span></div>`).join("")}<div class="sheets"><h3>Answers & sources</h3>${(s.answers ?? []).map(resultSheet).join("")}</div>`;
     $("again").onclick = startRun;
     for (const details of stage.querySelectorAll(".answer-sheet"))
       details.addEventListener("toggle", () => {
@@ -415,17 +499,20 @@ function render(s) {
         details.dataset.loaded = "true";
         const index = details.dataset.sheet;
         details.querySelector(".sheet-content").innerHTML =
-          `<input aria-label="Search answers for question ${Number(index) + 1}" placeholder="Search recorded answers…" maxlength="80"><p class="sheet-status" role="status"></p><div class="answer-list"></div><button class="text-button sheet-more" hidden>Show 100 more</button><p class="sheet-credit"></p>`;
+          `<input aria-label="Search answers for question ${Number(index) + 1}" placeholder="Search answers" maxlength="80"><p class="sheet-status" role="status"></p><div class="answer-list" role="region" tabindex="0" aria-label="Answers for question ${Number(index) + 1}"></div><button class="text-button sheet-more" hidden>Show 100 more</button><button class="secondary sheet-retry" hidden>RETRY</button><p class="sheet-credit"></p>`;
         let debounce;
         details.querySelector("input").oninput = (event) => {
           clearTimeout(debounce);
           const query = event.target.value;
           debounce = setTimeout(() => paintAnswers(details, query), 250);
         };
-        details.querySelector(".sheet-credit").textContent =
-          state.answers[Number(index)].scoring === "recorded"
-            ? "Recorded answer tiers from the cited companion archive."
-            : "House rarity tiers use an English-language familiarity proxy, not player statistics.";
+        const descriptor = state.answers[Number(index)];
+        const credit =
+          descriptor.scoring === "recorded"
+            ? "Recorded answer tiers."
+            : "House ratings estimate familiarity, not player popularity.";
+        details.querySelector(".sheet-credit").innerHTML =
+          `${credit} <a href="${escape(descriptor.source)}" target="_blank" rel="noreferrer">Question source ↗</a>`;
         paintAnswers(details);
       });
   }
@@ -442,17 +529,34 @@ function render(s) {
   for (const button of stage.querySelectorAll("[data-next]"))
     button.onclick = () => act("next");
   setBusy(busy);
+  const target =
+    s.phase === "intro"
+      ? stage.querySelector("[data-next]")
+      : s.phase === "feedback"
+        ? $("feedback-title")
+        : s.phase === "done"
+          ? $("result-title")
+          : innerWidth < 761
+            ? $("question")
+            : $("answer");
+  requestAnimationFrame(() => {
+    if (target?.isConnected && !$("invite-dialog").open)
+      target.focus({ preventScroll: true });
+  });
 }
 setInterval(() => {
   if (state?.phase !== "answering") return;
-  const left = Math.max(0, state.deadline - Date.now() - offset);
+  const left = Math.max(
+    0,
+    Math.min(25000, state.deadline - Date.now() - offset),
+  );
   if ($("seconds")) {
     $("seconds").textContent = (left / 1000).toFixed(1);
     $("bar").style.width = left / 250 + "%";
     $("stage").classList.toggle("urgent", left < 5000);
   }
 }, 100);
-setInterval(async () => {
+async function pollState() {
   if (!session || busy || polling || document.visibilityState === "hidden")
     return;
   polling = true;
@@ -461,11 +565,22 @@ setInterval(async () => {
     const s = await api("state", { summary: !!state?.answers });
     if (started === generation && !busy) render(s);
   } catch (error) {
-    if (started === generation) report(error);
+    if (started === generation) {
+      if (error.expired) report(error);
+      else connectionFailed();
+    }
   } finally {
     polling = false;
   }
-}, 1200);
+}
+setInterval(pollState, 1200);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") pollState();
+});
+window.addEventListener("online", pollState);
+window.addEventListener("offline", () => {
+  if (session) connectionFailed();
+});
 
 async function boot() {
   fetch("/api/info")
@@ -479,7 +594,11 @@ async function boot() {
     .catch(() => {});
   const invite = new URLSearchParams(location.search).get("room");
   try {
-    session = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+    session = JSON.parse(
+      sessionStorage.getItem(SESSION_KEY) ??
+        sessionStorage.getItem(LEGACY_SESSION_KEY),
+    );
+    saveSession();
   } catch {}
   // A shared link takes priority over the run already open in this tab.
   if (invite) {

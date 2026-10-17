@@ -152,3 +152,27 @@ test("invalid tiers or incomplete source coverage leave the saved bank untouched
     assert.equal(await readFile(f.dataPath, "utf8"), f.oldText);
   }
 });
+
+test("source access denial stops imports without altering saved records", async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "question-denied-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const dataPath = join(directory, "recorded.json");
+  const before =
+    JSON.stringify({
+      questions: [{ id: "retained", text: "Retain me", answers: [] }],
+    }) + "\n";
+  await writeFile(dataPath, before);
+  let requests = 0;
+  await assert.rejects(
+    syncRecorded({
+      dataPath,
+      fetcher: async () => {
+        requests++;
+        return { ok: false, status: 403 };
+      },
+    }),
+    /403/,
+  );
+  assert.equal(requests, 1);
+  assert.equal(await readFile(dataPath, "utf8"), before);
+});

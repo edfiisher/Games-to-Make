@@ -1,0 +1,41 @@
+# Counterline review
+
+17 October 2026. Scores are design and engineering judgments, not measured player satisfaction. The baseline is the 200-question GitHub version before this work; the public Render site was still on an older version during verification. A 10 would require stronger evidence from real players and production use.
+
+| Area | Before /10 | After /10 | Findings, plan and implemented changes |
+| --- | ---: | ---: | --- |
+| Brand and copy | 3 | 9 | Rename throughout the interface, invitations, page metadata and server. Done: Counterline, new tab icon, plain action labels, no repeated promotional slogans. Home has two short explanatory sentences. |
+| Home and navigation | 6 | 9 | Remove competing blocks and repeated instructions. Done: a solo button, optional friend controls and expandable scoring help. Sources remain a footer link. |
+| Solo and timer | 8 | 9 | Retain the untimed ready screen and server deadline. Done: shorter instructions, visible pending actions, phase focus and a countdown adjusted for approximate network travel time. The server remains authoritative. |
+| Invitations and multiplayer | 7 | 8 | Make group creation explicit and improve invited-player setup. Done: create-and-invite action, labeled dialog, copy fallback, name editing before the timer and point-based scoreboard. Players still start independent timers; this is not synchronized live racing. |
+| Answer matching | 8 | 8 | Retain conservative aliases and spelling suggestions. Done: confirm-button focus, original deadline, persistent rejection feedback until editing and tested decline/accept/reload. Arbitrary semantic synonyms still require curated aliases. |
+| Scoring clarity | 6 | 8 | Explain tiers and distinguish points from metres. Done: expandable six-tier guide, point totals and scores, distance on the mountain, links explaining house ratings and the selected standout. Frequency remains a familiarity proxy. |
+| Question variety and accuracy | 7 | 7 | Review the bank and its source/scoping checks. Verified: 200 distinct questions, 79 recorded plus 121 authored, finite-set integrity and topic variety. Source links are now directly available in every result sheet. Geography/chemistry are still overrepresented, and broad legacy lists need editorial review; 62,171 entries have not each been independently fact-checked. |
+| Rotation and saved progress | 8 | 9 | Preserve unseen-first selection during renaming. Done: legacy history/name fallback, new Counterline storage keys, unfinished-session migration and tests that an explicitly empty new history wins over old data. Rooms still reset on deployment. |
+| Skier and rewards | 8 | 8 | Keep meaningful rarity effects without slogans. Done: factual rarity callouts, readable score animations without low-contrast fades, all six effects verified, reduced motion preserved. Artwork itself remains the existing skier. |
+| Results and answer sheets | 7 | 9 | Improve summary hierarchy and error recovery. Done: point-based results, distance total, seven itemized answers, source links, explicit rating attribution, 100-answer pages, keyboard-scrollable lists and retry after failed loads. |
+| Phone and tablet layout | 6 | 8 | Put playing ahead of illustration on home and enlarge controls. Done: visible solo button without scrolling, 44px buttons, 16px answer fields, larger notes, compact illustration during play and no horizontal overflow at checked widths. More devices and real keyboards still deserve testing. |
+| Accessibility and keyboard | 5 | 8 | Baseline axe found contrast failures, invalid ARIA, missing headings during play and missing main landmark on sources. Fixed: darker text/buttons, landmarks, heading structure, skip links, named dialog, progress label, phase/correction focus and an explicit non-live timer. All 12 audited states pass automated checks. This is not a full screen-reader conformance audit. |
+| Connection errors and recovery | 6 | 8 | Explain lost connections and give recovery controls. Done: reconnecting notice with timer warning, immediate refresh on visibility/online changes, readable request errors and answer-sheet retry. Disconnection does not pause the server clock. |
+| Sound and preferences | 7 | 8 | Preserve the user's sound setting. Done: opt-in sound persists between visits; no startup autoplay. Names and existing progress also survive branding changes. |
+| Runtime speed and storage | 8 | 9 | Preserve the offline compact bank, bounded lazy matching and pagination. Added: in-process static file cache and content ETags with 304 revalidation; API state is always no-store. Local profile: 49ms bank load, 51MiB initial RSS, 196MiB peak after indexing every question, 3.6MB compiled bank. These are local measurements, not production capacity guarantees. |
+| Server validation and reliability | 8 | 8 | Retain server-controlled deadlines, scoring, correction IDs, request limits and room expiry. Added: authenticated, length-checked name changes blocked during timed turns; regression coverage for forged tokens and unchanged deadlines. In-memory rooms still disappear on restart. |
+| Imports and scheduling | 3 | 3 | Source permission is unresolved. Done: verified owner's contact address, prepared an accurate reuse/access request and added a denial test proving HTTP 403 leaves saved data unchanged. The daily schedule remains paused; no access control is bypassed. |
+| Hosting and maintenance | 6 | 6 | Correct branding, icon, deployment checks and source-access documentation. Code is ready for the existing Render service; owner dashboard access is still needed to deploy. Free-service sleep and in-memory rooms remain. |
+
+## Verification
+
+- **21/21 Node tests pass**, covering solo and multiplayer, deadlines and expiry, matching/corrections, question rotation, bank integrity, safe imports, rename migration, name validation and static revalidation.
+- A complete desktop browser run verifies the real ready screen, invite joining, guest renaming, seven scored answers, correction confirmation, source links, 100-answer pagination and recovery from a forced answer-sheet failure.
+- Legacy name/history/session migration, saved sound, fresh question selection, offline reconnection and immediate state recovery were checked in the browser.
+- **Zero axe violations in 12 states:** home, expanded scoring help, ready, invite dialog, answering, correction, feedback, final results, expanded answer sheet, sources, mobile group invitation and mobile answering. Rules cover WCAG A/AA and best-practice checks; this does not certify every accessibility requirement.
+- Layouts checked at **320, 390, 768 and 1440 CSS pixels**. Mobile start controls are visible without scrolling. Screenshots were visually inspected.
+- All six reward profiles, larger rare celebrations, correction reload/decline/confirm, no browser exceptions and reduced-motion behavior passed the separate animation suite.
+
+## Remaining work, in priority order
+
+1. **Deploy in Render:** Manual Deploy → Deploy latest commit; check `/api/info` for Counterline, version 5 and at least 200 questions. Enable automatic deploys from main if desired. This review tests the local release; it does not claim the old live site already has these changes.
+2. **Obtain approved source access:** use [the permission request](IMPORT-ACCESS.md), then verify a successful manual import before enabling the daily schedule. This depends on the remote site owner.
+3. **Improve content breadth:** prioritize history, arts, everyday objects and other underrepresented topics; review broad legacy answer lists in batches. Keep exact scope/source notes and avoid counting paraphrases as extra questions. Growing to 1,000 needs editorial work, not just recombining the existing sets.
+4. **Observe real play:** test on iOS/Safari with the on-screen keyboard and a screen reader, collect confusing corrections and add reviewed aliases. Automated Chromium checks cannot establish those results.
+5. **Persistence and availability if needed:** moving rooms to shared durable storage and avoiding host idle sleep would require hosting changes. No paid service or new account was created during this review.

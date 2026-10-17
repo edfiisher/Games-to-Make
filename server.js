@@ -1,6 +1,6 @@
 import http from "node:http";
 import { readFile } from "node:fs/promises";
-import { randomBytes } from "node:crypto";
+import { randomBytes, createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import {
   bank,
@@ -16,6 +16,7 @@ const ROUND_MS = 25000,
   ROOM_LIFETIME = 6 * 60 * 60 * 1000;
 export function createGameServer({ now = Date.now } = {}) {
   const rooms = new Map();
+  const assets = new Map();
   const token = () => randomBytes(16).toString("hex");
   function advance(p) {
     p.revision++;
@@ -136,8 +137,8 @@ export function createGameServer({ now = Date.now } = {}) {
       const url = new URL(req.url, "http://localhost");
       if (url.pathname === "/api/info" && req.method === "GET")
         return send(200, {
-          name: "Fresh Tracks",
-          version: 4,
+          name: "Counterline",
+          version: 5,
           questionCount: questions.length,
           questionIds: questions.map((q) => q.id),
           questionAliases: bank.questionAliases,
@@ -177,7 +178,7 @@ export function createGameServer({ now = Date.now } = {}) {
             return send(400, { error: "Invalid question history" });
           if (rooms.size >= 2000)
             return send(503, {
-              error: "The mountain is busy. Please try again later.",
+              error: "The server is busy. Please try again later.",
             });
           const selection = selectQuestions(b.seen ?? []);
           let code;
@@ -220,6 +221,14 @@ export function createGameServer({ now = Date.now } = {}) {
           });
         room.touchedAt = now();
         settle(room, p);
+        if (url.pathname === "/api/name") {
+          if (p.phase === "answering")
+            return send(409, { error: "Change your name between questions." });
+          if (!b.name?.trim()) return send(400, { error: "Enter a name." });
+          p.name = b.name.trim();
+          p.revision++;
+          return send(200, state(room, p));
+        }
         if (url.pathname === "/api/answers") {
           if (p.results.length !== 7)
             return send(403, {
@@ -256,13 +265,11 @@ export function createGameServer({ now = Date.now } = {}) {
             scoring: q.scoring,
             total: filtered.length,
             offset,
-            answers: filtered
-              .slice(offset, offset + 100)
-              .map((a) => ({
-                answer: a.answer,
-                tier: a.tier,
-                score: scores[a.tier],
-              })),
+            answers: filtered.slice(offset, offset + 100).map((a) => ({
+              answer: a.answer,
+              tier: a.tier,
+              score: scores[a.tier],
+            })),
           });
         }
         if (url.pathname === "/api/next") {
@@ -323,20 +330,41 @@ export function createGameServer({ now = Date.now } = {}) {
         "/descent.js": ["descent.js", "text/javascript"],
         "/assets/skier.webp": ["assets/skier.webp", "image/webp"],
         "/sources": ["sources.html", "text/html"],
+        "/icon.svg": ["icon.svg", "image/svg+xml"],
       };
       const f = files[url.pathname];
       if (!f) return send(404, { error: "Not found" });
-      const contents = await readFile(
-        new URL("./public/" + f[0], import.meta.url),
-      );
-      res.writeHead(200, {
+      let asset = assets.get(f[0]);
+      if (!asset) {
+        const contents = await readFile(
+          new URL("./public/" + f[0], import.meta.url),
+        );
+        asset = {
+          contents,
+          etag:
+            '"' +
+            createHash("sha256").update(contents).digest("hex").slice(0, 24) +
+            '"',
+        };
+        assets.set(f[0], asset);
+      }
+      const headers = {
         "Content-Type":
           f[1] + (f[1].startsWith("image/") ? "" : "; charset=utf-8"),
         "Cache-Control": "no-cache",
         "X-Content-Type-Options": "nosniff",
         "Referrer-Policy": "same-origin",
+        ETag: asset.etag,
+      };
+      if (req.headers["if-none-match"] === asset.etag) {
+        res.writeHead(304, headers);
+        return res.end();
+      }
+      res.writeHead(200, {
+        ...headers,
+        "Content-Length": asset.contents.length,
       });
-      res.end(contents);
+      res.end(asset.contents);
     } catch {
       if (!res.headersSent)
         send(500, { error: "Something went wrong. Please try again." });
@@ -348,6 +376,6 @@ export function createGameServer({ now = Date.now } = {}) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.PORT ?? 3000);
   createGameServer().listen(port, "0.0.0.0", () =>
-    console.log(`Fresh Tracks listening on port ${port}`),
+    console.log(`Counterline listening on port ${port}`),
   );
 }

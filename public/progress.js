@@ -1,7 +1,10 @@
-const KEY = "fresh-tracks-seen-v1";
+const KEY = "counterline-seen-v1";
 export function readHistory(storage) {
   try {
-    const x = JSON.parse(storage.getItem(KEY) ?? "[]");
+    // Preserve questions played before the game was renamed.
+    const x = JSON.parse(
+      storage.getItem(KEY) ?? storage.getItem("fresh-tracks-seen-v1") ?? "[]",
+    );
     return Array.isArray(x)
       ? x.filter((id) => typeof id === "string").slice(-3000)
       : [];

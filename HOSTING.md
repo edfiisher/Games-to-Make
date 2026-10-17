@@ -1,6 +1,6 @@
-# Hosting Fresh Tracks
+# Hosting Counterline
 
-The existing game address is **https://flat-dive.onrender.com**. The service name remains `flat-dive` so the skiing update keeps the same address.
+The existing game address is **https://flat-dive.onrender.com**. The game is named Counterline; the Render service remains `flat-dive` to keep existing links and browser history working.
 
 `render.yaml` describes a free Render Node service. It builds with `node --version && npm test` and starts with `npm start`, using Node 24.19.0. The game reads Render's `PORT` automatically and needs no game API keys. A normal push to GitHub's `main` branch triggers deployment when automatic deploys are enabled in Render.
 
@@ -10,7 +10,7 @@ Free hosting may sleep when idle. Rooms and scores are in memory and disappear o
 
 Anyone with the game address can start a solo run. Invite codes let friends join the same seven-question run but do not make the whole website password protected.
 
-After deployment, check `/api/info` for `name: "Fresh Tracks"`, `version: 4` and `questionCount: 200` (or higher after imports), then verify the untimed ready screen, starting the timer, sharing an invitation before a turn, confirming a suggested correction, and scoring an answer. A successful deployment or open port alone does not verify those behaviours.
+After deployment, check `/api/info` for `name: "Counterline"`, `version: 5` and `questionCount: 200` (or higher after imports), then verify the untimed ready screen, starting the timer, sharing an invitation before a turn, confirming a suggested correction, and scoring an answer. A successful deployment or open port alone does not verify those behaviours.
 
 
 ## Daily question updates
@@ -24,3 +24,5 @@ A successful import changes the files in GitHub; Render must then deploy that co
 No scheduler or scraper runs inside the game server, and no private Krillion answer endpoint is accessed. Newly advertised questions wait until the companion publishes answers. If source coverage, counts or tiers fail validation, the job fails and the existing deployed bank remains usable. Check failed Actions runs for source changes. GitHub scheduling is best effort and may stop after 60 days of inactivity in a public repository.
 
 The current bank needs only a few megabytes of disk. Free hosting still has resource and availability limits, including idle sleep; adding more questions does not remove those limits. Keep the compiled bank in version control rather than depending on writes to Render's ephemeral filesystem.
+
+For the source owner’s contact details and a permission-request draft, see [Import access](docs/IMPORT-ACCESS.md). There is no GitHub or Render switch that grants access to another site.
