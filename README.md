@@ -74,7 +74,7 @@ To grow toward 1,000, add clearly scoped sets with authoritative sources and alt
 
 ## Storage and performance
 
-The compiled 200-question bank is about **3.6 MB** (3.4 MiB); all data including retained records and licenses is about 7 MB. It stays on the server. Browsers receive seven prompts and small state updates; answer sheets are searched and loaded in pages of at most 100 answers. The skier uses a 650 KB lossless WebP, with original pixels preserved.
+The compiled 200-question bank is about **3.6 MB** (3.4 MiB); all data including retained records and licenses is about 7 MB. It stays on the server. Browsers receive seven prompts and small state updates; answer sheets are searched and loaded in pages of at most 100 answers. The skier is inline vector artwork, with no image download or animation dependency.
 
 Matching indexes compile only for played questions. Their cache is bounded by 16 questions and 30,000 keys, except a single oversized question can remain. A local profile loaded the bank in about 40 ms, used about 51 MiB RSS initially and peaked around 205 MiB after walking all questions. These are local measurements, not a guarantee of Render latency or simultaneous-player capacity. Re-run `npm run profile` when expanding the bank. There are no third-party runtime dependencies or per-answer API costs.
 
@@ -82,7 +82,9 @@ Room state is in memory and clears on server restart or redeployment. Inactive r
 
 ## Graphics and rewards
 
-The skier uses original generated artwork at `public/assets/skier.webp`. Six rarity profiles vary carving, powder spray, air time and celebration intensity. Rare answers add a hop, Very rare answers add a bigger jump and purple powder, and Standout answers add a 360 and gold snow stars. The scoring card and optional sound also vary by tier. Browser polling does not restart the animation. The reduced-motion setting disables travel animation, jumps, particles and camera motion while preserving score and tier feedback.
+The skier uses original flat SVG artwork in `public/index.html`, matching the mountain's palette and shapes. `public/skier.js` bends the knees and elbows with a two-bone joint rig; boots stay on the skis, arms lead alternating pole plants, and the torso shifts weight through turns. `public/descent.js` follows the route with smoothly steered skis, takeoff anticipation, tucked jumps and flexed landings. Standout answers add a vertical-axis 360 and gold snow stars. Snow comes from grounded edges and landings. Six rarity profiles vary movement and powder, while the score card and optional sound also vary by tier.
+
+One animation loop owns both the quiet idle stance and scored travel. Polling does not restart it. Idle motion draws at 30fps; movement pauses while the mountain is offscreen or the tab is hidden. Reduced motion freezes the articulated pose, skips travel and particles, and updates the score position immediately.
 
 
 ## Review and maintenance

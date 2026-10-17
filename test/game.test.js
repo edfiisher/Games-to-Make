@@ -557,7 +557,7 @@ test("unchanged static assets revalidate without retransmission and game state n
   for (const path of [
     "/",
     "/app.js",
-    "/assets/skier.webp",
+    "/skier.js",
     "/icon.svg",
     "/sources",
   ]) {

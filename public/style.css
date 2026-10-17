@@ -981,20 +981,14 @@ dialog > p {
   transform-origin: 50% 50%;
   will-change: transform;
 }
-#skier image {
-  filter: drop-shadow(0 2px 1px #173c4229);
-}
 .mountain-panel[data-effect="rare"] #ski-trail {
   stroke: #258f82;
-  filter: drop-shadow(0 0 3px #9ae5d1);
 }
 .mountain-panel[data-effect="deepcut"] #ski-trail {
   stroke: #8e6bb7;
-  filter: drop-shadow(0 0 4px #bfa6df);
 }
 .mountain-panel[data-effect="krillion"] #ski-trail {
   stroke: #d79a20;
-  filter: drop-shadow(0 0 5px #f8d87f);
 }
 .descent-callout {
   position: absolute;

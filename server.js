@@ -328,7 +328,7 @@ export function createGameServer({ now = Date.now } = {}) {
         "/style.css": ["style.css", "text/css"],
         "/progress.js": ["progress.js", "text/javascript"],
         "/descent.js": ["descent.js", "text/javascript"],
-        "/assets/skier.webp": ["assets/skier.webp", "image/webp"],
+        "/skier.js": ["skier.js", "text/javascript"],
         "/sources": ["sources.html", "text/html"],
         "/icon.svg": ["icon.svg", "image/svg+xml"],
       };
